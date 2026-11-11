@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<base target="_top">
+<meta name="theme-color" content="#4f46e5">
+<title>דרור · שחר · סנכרון יומי</title>
+<style>
+:root{
+  --bg:#f4f5fa;--card:#fff;--text:#1d2033;--muted:#6b7090;--line:#e6e8f0;
+  --pri:#4f46e5;--pri-2:#eef0ff;--ok:#16a34a;--ok-2:#e8f7ee;--warn:#c2410c;--warn-2:#fff3e6;
+  --bad:#dc2626;--bad-2:#fdecec;--radius:16px;
+  --shadow:0 1px 2px rgba(20,20,50,.05),0 6px 18px rgba(20,20,50,.06);
+  --nav-h:66px;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0f1117;--card:#181b24;--text:#e8eaf2;--muted:#9aa0b8;--line:#2a2e3c;--pri:#8b93ff;--pri-2:#23264a;
+        --ok-2:#12301f;--warn:#fb923c;--warn-2:#38260f;--bad:#f87171;--bad-2:#3a1717;--shadow:none}
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans Hebrew",Rubik,Roboto,Arial,sans-serif;
+  font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+body.noscroll{overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--pri)}
+[hidden]{display:none!important}
+.muted{color:var(--muted)}.small{font-size:.82rem}.grow{flex:1}
+
+header.top{position:sticky;top:0;z-index:20;background:var(--bg);
+  border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top)) 16px 10px}
+.top-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.brand{display:flex;flex-direction:column;line-height:1.15}
+.brand b{font-size:1.05rem}.brand span{font-size:.78rem;color:var(--muted)}
+.sync{width:10px;height:10px;border-radius:50%;background:var(--ok);flex:none;transition:background .2s}
+.sync.busy{background:var(--pri);animation:pulse 1s infinite}.sync.bad{background:var(--bad)}
+@keyframes pulse{50%{opacity:.35}}
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:999px;font-size:.88rem;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--pri);color:#fff}
+
+main{max-width:760px;margin:0 auto;padding:14px 14px calc(var(--nav-h) + 90px + env(safe-area-inset-bottom))}
+.tab{display:none}.tab.on{display:block;animation:fade .18s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--line);
+  padding:14px 16px;margin-bottom:14px}
+.card-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.card-head h2{font-size:1.02rem;margin:0;flex:1}
+h3{margin:0;font-size:1.05rem}
+h4{margin:14px 0 6px;font-size:.85rem;color:var(--muted);font-weight:600}
+.empty{color:var(--muted);text-align:center;padding:14px 6px;font-size:.92rem}
+.page-title{font-size:1.25rem;margin:4px 2px 12px;display:flex;align-items:center;gap:8px;font-weight:800}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);
+  background:var(--card);border-radius:12px;padding:9px 14px;cursor:pointer;font-weight:600;font-size:.92rem;
+  text-decoration:none;color:var(--text);min-height:42px;transition:transform .08s}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--bad);border-color:var(--bad-2);background:var(--bad-2)}
+.btn.sm{padding:6px 10px;min-height:34px;font-size:.84rem;border-radius:10px}
+.btn.big{width:100%;padding:14px;font-size:1rem}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.icon-btn{border:0;background:transparent;cursor:pointer;padding:6px 8px;border-radius:10px;color:var(--muted);font-size:1rem}
+.icon-btn.sm{padding:2px 6px;font-size:.7rem}
+.icon-btn:hover{background:var(--pri-2)}
+
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:.75rem;padding:2px 8px;border-radius:999px;
+  background:var(--pri-2);color:var(--pri);white-space:nowrap;text-decoration:none;font-weight:600}
+.chip.bad{background:var(--bad-2);color:var(--bad)}.chip.warn{background:var(--warn-2);color:var(--warn)}
+.chip.ok{background:var(--ok-2);color:var(--ok)}.chip.gray{background:var(--bg);color:var(--muted)}
+.chip.own-Dror{background:#e0f2fe;color:#0369a1}.chip.own-Shachar{background:#fce7f3;color:#be185d}
+@media (prefers-color-scheme:dark){.chip.own-Dror{background:#0c2f45;color:#7dd3fc}.chip.own-Shachar{background:#43142d;color:#f9a8d4}}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.fchip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:.85rem;
+  cursor:pointer;white-space:nowrap;color:var(--text)}
+.fchip.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+.fchip .n{opacity:.6;margin-inline-start:4px;font-size:.78rem}
+
+.list{list-style:none;margin:0;padding:0}
+.item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.list .item:first-child{border-top:0}
+.item.pending,.pending{opacity:.55}
+.item-body{flex:1;min-width:0;cursor:pointer}
+.item-title{font-weight:600;word-break:break-word}
+.item.done .item-title,.item.discussed .item-title{text-decoration:line-through;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px;font-size:.78rem}
+.item-notes{font-size:.85rem;color:var(--muted);margin-top:4px;white-space:pre-wrap;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.item.overdue{background:linear-gradient(270deg,transparent,var(--bad-2));margin:0 -16px;padding:10px 16px;border-inline-start:3px solid var(--bad)}
+.check{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid var(--line);background:var(--card);
+  color:transparent;cursor:pointer;font-weight:900;font-size:.85rem;display:grid;place-items:center;margin-top:1px;transition:all .15s;padding:0}
+.check:hover{border-color:var(--ok);color:var(--ok)}
+.check.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.tbox{flex:none;font-size:.78rem;font-weight:700;color:var(--pri);background:var(--pri-2);border-radius:8px;padding:3px 7px;margin-top:2px}
+.reorder{display:flex;flex-direction:column}
+.group-title{font-size:.82rem;font-weight:700;color:var(--muted);margin:14px 2px 6px}
+
+.meet{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:0}
+.meet .muted{color:rgba(255,255,255,.8)}
+.meet-when{font-size:1.5rem;font-weight:800;margin:2px 0}
+.meet-sub{font-size:.9rem;opacity:.92}
+.meet .btn{border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.15);color:#fff}
+.meet .btn.primary{background:#fff;color:#4f46e5;border-color:#fff}
+.meet-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.pill{display:inline-block;font-size:.75rem;font-weight:700;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.2)}
+.slots{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.slot{border:1.5px solid rgba(255,255,255,.5);background:transparent;color:#fff;border-radius:12px;padding:8px 14px;cursor:pointer;font-weight:700;direction:ltr}
+.slot.on{background:#fff;color:#4f46e5;border-color:#fff}
+
+.quick{display:flex;gap:8px;margin-top:10px}
+.quick input{flex:1;min-width:0}
+input[type=text],input[type=url],input[type=date],input[type=time],input[type=number],input:not([type]),select,textarea{
+  width:100%;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px;min-height:44px;outline:none;font-size:16px}
+input:focus,select:focus,textarea:focus{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-2)}
+textarea{resize:vertical;min-height:80px}
+.fld{display:block;margin-bottom:12px}.fld>span{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:4px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+details.more>summary{cursor:pointer;color:var(--pri);font-size:.88rem;margin-bottom:10px;list-style:none}
+
+.tm-main{text-align:center;margin:4px 0 8px}
+.tm-total{font-size:3.2rem;font-weight:800;letter-spacing:1px;direction:ltr;font-variant-numeric:tabular-nums;line-height:1.1}
+.tm-total.warn{color:var(--warn)}.tm-total.over{color:var(--bad)}
+.tm-label{font-size:.8rem;color:var(--muted)}
+.bar{height:8px;background:var(--bg);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;width:0;background:var(--pri);border-radius:99px;transition:width .4s linear}
+.bar.sm{height:6px;margin-top:6px}
+.bar i.over{background:var(--bad)}.bar i.warn{background:var(--warn)}
+.tm-item{margin-top:12px;background:var(--pri-2);border-radius:12px;padding:10px 12px}
+.tm-item-row{display:flex;align-items:center;gap:8px}
+.tm-item-title{font-weight:700;flex:1}
+.tm-item-time{font-weight:800;direction:ltr;font-variant-numeric:tabular-nums}
+.tm-item-time.over{color:var(--bad)}
+.tm-steps{list-style:none;margin:10px 0 0;padding:0;font-size:.86rem}
+.tm-steps li{display:flex;gap:8px;padding:4px 0;color:var(--muted)}
+.tm-steps li span{flex:1}
+.tm-steps li.cur{color:var(--text);font-weight:700}
+.tm-steps li.done span{text-decoration:line-through}
+.tm-ctrl{display:flex;gap:8px;margin-top:12px}
+.tm-ctrl .btn{flex:1;padding:9px 6px}
+
+details.sum{padding:0}
+details.sum>summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:10px}
+details.sum>summary::-webkit-details-marker{display:none}
+details.sum>summary>div{flex:1}
+.sum-date{font-weight:800}
+.chev{transition:transform .2s;color:var(--muted)}
+details[open] .chev{transform:rotate(180deg)}
+.sum-body{padding:0 16px 14px;border-top:1px solid var(--line)}
+.prose{white-space:pre-wrap;font-size:.95rem}
+ul.bul{margin:0;padding-inline-start:20px}ul.bul li{margin:3px 0}
+.sum-foot{display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap}
+
+nav.bottom{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--card);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom)}
+.nav-in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);height:var(--nav-h)}
+.nav-in button{border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;font-size:.74rem;color:var(--muted);position:relative}
+.nav-in button .ic{font-size:1.3rem;line-height:1;filter:grayscale(1);opacity:.7}
+.nav-in button.on{color:var(--pri);font-weight:700}
+.nav-in button.on .ic{filter:none;opacity:1}
+.badge{position:absolute;top:8px;left:calc(50% - 26px);min-width:18px;height:18px;border-radius:9px;background:var(--bad);
+  color:#fff;font-size:.68rem;font-weight:800;display:grid;place-items:center;padding:0 5px}
+.badge.blue{background:var(--pri)}
+.fab{position:fixed;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));left:max(16px,calc(50% - 364px));
+  z-index:25;width:56px;height:56px;border-radius:50%;border:0;background:var(--pri);color:#fff;font-size:1.8rem;
+  box-shadow:0 8px 24px rgba(79,70,229,.4);cursor:pointer;line-height:1}
+
+.modal{position:fixed;inset:0;z-index:50;background:rgba(10,12,25,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--card);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;
+  padding:16px 16px calc(16px + env(safe-area-inset-bottom));animation:up .2s ease}
+@media (min-width:700px){.modal{align-items:center}.sheet{border-radius:20px}}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.sheet-head{display:flex;align-items:center;margin-bottom:12px}.sheet-head h3{flex:1}
+.sheet-foot{display:flex;gap:8px;align-items:center;margin-top:6px}
+.who-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0 4px}
+.who-btns .btn{padding:22px 10px;font-size:1.1rem;flex-direction:column}
+
+.toast{position:fixed;bottom:calc(var(--nav-h) + 86px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  z-index:60;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.9rem;max-width:90vw;
+  box-shadow:var(--shadow);animation:fade .2s}
+.toast.bad{background:var(--bad);color:#fff}
+.skel{height:90px;border-radius:var(--radius);margin-bottom:14px;
+  background:linear-gradient(90deg,var(--card) 25%,var(--line) 50%,var(--card) 75%);background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.err{text-align:center;padding:40px 16px}
+.sum-tools{display:flex;gap:8px;margin-bottom:10px;position:sticky;top:64px;z-index:5;background:var(--bg);padding:4px 0}
+.sum-tools input{flex:1;min-width:0}.sum-tools select{width:auto;max-width:44%}
+.sum-title{font-weight:800;word-break:break-word}
+.month-title{font-size:.82rem;font-weight:800;color:var(--muted);margin:16px 2px 8px}
+.more-btn{width:100%;margin-bottom:14px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <span class="sync busy" id="sync" title="מסנכרן…"></span>
+    <div class="brand grow"><b>סנכרון יומי</b><span>דרור · שחר · 15 דקות</span></div>
+    <div class="seg" id="who" role="group" aria-label="מי אני">
+      <button type="button" data-act="setMe" data-v="Dror">דרור</button>
+      <button type="button" data-act="setMe" data-v="Shachar">שחר</button>
+    </div>
+  </div>
+</header>
+
+<main id="app">
+  <section class="tab" id="tab-today"></section>
+  <section class="tab" id="tab-agenda"></section>
+  <section class="tab" id="tab-tasks"></section>
+  <section class="tab" id="tab-summaries"></section>
+</main>
+
+<button class="fab" id="fab" hidden aria-label="הוספה">+</button>
+
+<nav class="bottom">
+  <div class="nav-in">
+    <button type="button" data-act="tab" data-v="today"><span class="ic">🏠</span>היום</button>
+    <button type="button" data-act="tab" data-v="agenda"><span class="ic">🗂️</span>אג׳נדה<span class="badge blue" id="bAgenda" hidden></span></button>
+    <button type="button" data-act="tab" data-v="tasks"><span class="ic">✅</span>משימות<span class="badge" id="bTasks" hidden></span></button>
+    <button type="button" data-act="tab" data-v="summaries"><span class="ic">📝</span>סיכומים</button>
+  </div>
+</nav>
+
+<div class="modal" id="modal" hidden></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function () {
+'use strict';
+
+/* ---------------- Config ---------------- */
+var KEY = (function () {
+  var LS = 'ds_sync_key', h = (location.hash || '').replace(/^#(k=)?/, '').trim();
+  try {
+    if (h) {
+      localStorage.setItem(LS, h);
+      if (history.replaceState) history.replaceState(null, '', location.pathname + location.search); // hide key from the address bar
+      return h;
+    }
+    return localStorage.getItem(LS) || '';
+  } catch (e) { return h; } // storage blocked (some private modes): key from the link still works for this visit
+})();
+var API_URL = "https://script.google.com/macros/s/AKfycbypWC3zxI6NALV-xX_SbqJMmt3Lcr5nDQzuo-UlQIdAKKyOhYPFM-T-E5Vh9b7w2UVfCA/exec";
+var TZ = 'America/New_York';
+var TOTAL_SEC = 15 * 60;
+var REFRESH_MS = 60000;
+
+var PEOPLE = { Dror: 'דרור', Shachar: 'שחר', Both: 'שנינו', Bot: 'אוטומציה' };
+var OWNER_OPTS = { Dror: 'דרור', Shachar: 'שחר', Both: 'שנינו' };
+var TASK_STATUS = { 'open': 'פתוחה', 'in progress': 'בתהליך', 'done': 'הושלמה' };
+var MEETING_STATUS = { proposed: 'הוצעה', confirmed: 'מאושרת', done: 'התקיימה', cancelled: 'בוטלה' };
+var SOURCE = { manual: 'ידני', email: 'מייל', meeting: 'פגישה', task: 'משימה', tldv: 'tl;dv', teams: 'Teams' };
+var SOURCE_ICON = { email: '✉️', meeting: '📅', task: '✅', tldv: '🎙️', teams: '💬' };
+
+var S = {
+  data: { meetings: [], agenda: [], tasks: [], summaries: [] },
+  loaded: false, error: '',
+  me: localStorage.getItem('sync.me') || '',
+  tab: localStorage.getItem('sync.tab') || 'today',
+  f: { owner: localStorage.getItem('sync.fOwner') || 'all', status: localStorage.getItem('sync.fStatus') || 'active' },
+  pending: 0, refreshing: false, rev: 0, lastSync: 0, needRefresh: false,
+  modalSubmit: null, openSum: {}, alert: {},
+  sumQ: '', sumMonth: localStorage.getItem('sync.sumMonth') || '', sumLimit: 25
+};
+
+/* ---------------- Helpers ---------------- */
+function $(s, r) { return (r || document).querySelector(s); }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function safeUrl(u) { u = String(u || '').trim(); return /^https?:\/\//i.test(u) ? u : ''; }
+function person(p) { return PEOPLE[p] || p || ''; }
+function me() { return S.me || 'Unknown'; }
+function tmpId() { return 'tmp_' + Math.random().toString(36).slice(2, 10); }
+function isTmp(id) { return String(id || '').indexOf('tmp_') === 0; }
+function nowStamp() { var p = partsInTz(new Date(), TZ); return p.year + '-' + p.month + '-' + p.day + ' ' + p.hour + ':' + p.minute + ':' + p.second; }
+function errMsg(e) { return (e && (e.message || String(e))) || 'שגיאה'; }
+function opt(map, sel) {
+  return Object.keys(map).map(function (v) {
+    return '<option value="' + esc(v) + '"' + (v === sel ? ' selected' : '') + '>' + esc(map[v]) + '</option>';
+  }).join('');
+}
+function splitLines(s) {
+  return String(s || '').split(/\n+/).map(function (x) { return x.replace(/^\s*[-•*]\s*/, '').trim(); }).filter(Boolean);
+}
+function meetingKeyOf(date, time, title) { return [date || '', time || '', String(title || '').trim()].join('|'); }
+function summaryByKey(k) { return k ? S.data.summaries.filter(function (x) { return x.meetingKey === k; })[0] : null; }
+function sumSort(a, b) { return ((b.date || '') + (b.time || '')).localeCompare((a.date || '') + (a.time || '')); }
+function monthLabel(ym) {
+  var a = ym.split('-').map(Number);
+  return new Date(Date.UTC(a[0], a[1] - 1, 15)).toLocaleDateString('he-IL', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+}
+function byId(coll, id) { return S.data[coll].filter(function (x) { return x.id === id; })[0]; }
+
+/* Dates: all business dates/times are New York wall-clock. */
+function partsInTz(d, tz) {
+  var f = new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit',
+    day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  var o = {};
+  f.formatToParts(d).forEach(function (p) { o[p.type] = p.value; });
+  if (o.hour === '24') o.hour = '00';
+  return o;
+}
+function todayStr() { var p = partsInTz(new Date(), TZ); return p.year + '-' + p.month + '-' + p.day; }
+function tzOffsetMin(d, tz) {
+  var p = partsInTz(d, tz);
+  var asUtc = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second);
+  return Math.round((asUtc - Math.floor(d.getTime() / 1000) * 1000) / 60000);
+}
+function nyInstant(date, time) {
+  if (!date) return null;
+  var a = date.split('-').map(Number), t = String(time || '00:00').split(':').map(Number);
+  var guess = Date.UTC(a[0], a[1] - 1, a[2], t[0] || 0, t[1] || 0);
+  var off = tzOffsetMin(new Date(guess), TZ), inst = guess - off * 60000;
+  var off2 = tzOffsetMin(new Date(inst), TZ);
+  if (off2 !== off) inst = guess - off2 * 60000;
+  return new Date(inst);
+}
+function addDays(s, n) { var a = s.split('-').map(Number); return new Date(Date.UTC(a[0], a[1] - 1, a[2] + n)).toISOString().slice(0, 10); }
+function weekday(s) { var a = s.split('-').map(Number); return new Date(Date.UTC(a[0], a[1] - 1, a[2])).getUTCDay(); }
+function nextWorkday(s) { var x = s; do { x = addDays(x, 1); } while (weekday(x) === 0 || weekday(x) === 6); return x; }
+function fmtDate(s, o) {
+  if (!s) return '';
+  var a = s.split('-').map(Number);
+  if (!a[0] || !a[1] || !a[2]) return s;
+  return new Date(Date.UTC(a[0], a[1] - 1, a[2], 12)).toLocaleDateString('he-IL',
+    Object.assign({ weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }, o || {}));
+}
+function shortDate(s) { return fmtDate(s, { weekday: 'short', day: 'numeric', month: 'numeric' }); }
+function relDay(s) {
+  var t = todayStr();
+  if (s === t) return 'היום';
+  if (s === addDays(t, 1)) return 'מחר';
+  if (s === addDays(t, -1)) return 'אתמול';
+  return fmtDate(s);
+}
+function dueLabel(s) { var r = relDay(s); return /^(היום|מחר|אתמול)$/.test(r) ? r : shortDate(s); }
+function localTime(inst) {
+  var vt = '';
+  try { vt = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) { vt = ''; }
+  if (!vt || tzOffsetMin(inst, vt) === tzOffsetMin(inst, TZ)) return '';
+  return inst.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+function untilLabel(inst) {
+  var diff = Math.round((inst.getTime() - Date.now()) / 60000);
+  if (diff < -20) return '';
+  if (diff <= 0) return 'עכשיו';
+  if (diff < 60) return 'בעוד ' + diff + ' דק׳';
+  var h = Math.floor(diff / 60), m = diff % 60;
+  if (h < 24) return 'בעוד ' + h + ' שע׳' + (m ? ' ו-' + m + ' דק׳' : '');
+  return '';
+}
+function fmtClock(sec) {
+  var neg = sec < 0, s = neg ? Math.floor(-sec) : Math.ceil(sec);
+  return (neg ? '+' : '') + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+}
+function fmtMin(sec) { var m = sec / 60; return (m % 1 ? m.toFixed(1) : m) + ' דק׳'; }
+function slotTime(s) { var m = String(s).match(/(\d{1,2}:\d{2})/); return m ? m[1].padStart(5, '0') : s; }
+
+/* ---------------- Server ---------------- */
+function call(action, payload) {
+  // Standalone build: talks to the Apps Script JSON API with fetch (no Google cookies, no google.script.run).
+  var body = JSON.stringify({ key: KEY, action: action, data: payload || {} });
+  function once() {
+    return fetch(API_URL, {
+      method: 'POST', body: body, credentials: 'omit', redirect: 'follow', cache: 'no-store',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    }).then(function (r) {
+      if (!r.ok) throw new Error('שגיאת שרת ' + r.status);
+      return r.text();
+    }).then(function (t) {
+      var j; try { j = JSON.parse(t); } catch (e) { throw new Error('תשובה לא תקינה מהשרת'); }
+      if (!j.ok) throw new Error(j.error || 'שגיאה');
+      return j.result;
+    });
+  }
+  var readOnly = { ping: 1, getAll: 1, getMeeting: 1, getSummary: 1 };
+  return once().catch(function (e) {
+    if (!readOnly[action]) throw e; // never auto-retry writes
+    return new Promise(function (res) { setTimeout(res, 800); }).then(once);
+  });
+}
+
+function refresh() {
+  if (S.pending > 0 || S.refreshing) return;
+  var a = document.activeElement;
+  if (S.loaded && a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && $('#app').contains(a) && a.value) return; // don't wipe typing
+  var rev = S.rev;
+  S.refreshing = true; setSync();
+  call('getAll').then(function (res) {
+    if (S.pending > 0 || S.rev !== rev) return; // local change in flight; next cycle syncs
+    S.data = { meetings: res.meetings || [], agenda: res.agenda || [], tasks: res.tasks || [], summaries: res.summaries || [] };
+    S.loaded = true; S.error = ''; S.lastSync = Date.now();
+    renderAll();
+  }).catch(function (e) {
+    if (!S.loaded) { S.error = errMsg(e); renderAll(); }
+    else toast('הרענון נכשל: ' + errMsg(e), true);
+  }).then(function () { S.refreshing = false; setSync(); });
+}
+
+/** Optimistic mutation: apply locally -> render -> call server -> reconcile, or roll back on error. */
+function mutate(coll, apply, action, payload, opts) {
+  opts = opts || {};
+  var snap = JSON.stringify(S.data[coll]);
+  S.rev++;
+  apply();
+  S.pending++;
+  renderAll(); setSync();
+  return call(action, payload).then(function (res) {
+    var id = opts.tempId || (res && res.id);
+    if (res && res.id && id) {
+      var arr = S.data[coll], i = -1;
+      for (var k = 0; k < arr.length; k++) if (arr[k].id === id || arr[k].id === res.id) { i = k; break; }
+      var rec = Object.assign({}, res); delete rec.createdTasks; delete rec.duplicate;
+      if (i >= 0) arr[i] = rec; else arr.push(rec);
+    }
+    if (opts.after) opts.after(res);
+    return res;
+  }).catch(function (e) {
+    S.data[coll] = JSON.parse(snap);
+    S.needRefresh = true;
+    toast((opts.failMsg || 'השמירה נכשלה') + ': ' + errMsg(e), true);
+  }).then(function (r) {
+    S.pending--; S.rev++;
+    renderAll(); setSync();
+    if (S.pending === 0 && S.needRefresh) { S.needRefresh = false; refresh(); }
+    return r;
+  });
+}
+
+/* ---------------- Derived data ---------------- */
+function byDateTime(a, b) { return ((a.date || '') + (a.time || '')).localeCompare((b.date || '') + (b.time || '')); }
+
+function nextMeeting() {
+  var t = todayStr();
+  var list = S.data.meetings.filter(function (m) {
+    return m.date && m.date >= t && m.status !== 'done' && m.status !== 'cancelled';
+  }).sort(byDateTime);
+  for (var i = 0; i < list.length; i++) {
+    var inst = nyInstant(list[i].date, list[i].time || '23:59');
+    var dur = (+list[i].durationMin || 15) + 30;
+    if (inst.getTime() + dur * 60000 > Date.now() || i === list.length - 1) return list[i];
+  }
+  return null;
+}
+function lastMeetingDate() {
+  var t = todayStr();
+  var d = S.data.meetings.filter(function (m) { return m.date && m.date <= t && m.status !== 'cancelled'; }).sort(byDateTime).pop();
+  return d ? d.date : t;
+}
+function defaultAgendaDate() { var m = nextMeeting(); return m ? m.date : nextWorkday(todayStr()); }
+function agendaGroupKey(x, m) { return !x.date || (m && x.date <= m.date) || (!m && x.date <= todayStr()) ? 'next' : x.date; }
+
+function agendaSort(a, b) {
+  var oa = +a.order || 9999, ob = +b.order || 9999;
+  if (oa !== ob) return oa - ob;
+  return String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
+}
+/** Open items for a meeting: undated, dated that day, or carried over from earlier days. */
+function agendaFor(m) {
+  var d = m ? m.date : todayStr();
+  return S.data.agenda.filter(function (a) { return a.status !== 'discussed' && (!a.date || a.date <= d); }).sort(agendaSort);
+}
+/** Timebox: explicit minutes win, the rest of the 15 minutes is split evenly (min 1 min, 30s steps). */
+function allocate(items) {
+  var fixed = 0, free = 0;
+  items.forEach(function (a) { var n = +a.minutes; if (n > 0) fixed += n * 60; else free++; });
+  var rem = Math.max(TOTAL_SEC - fixed, 0);
+  var each = free ? Math.max(60, Math.floor(rem / free / 30) * 30) : 0;
+  var map = {}, out = [], total = 0;
+  items.forEach(function (a) {
+    var sec = +a.minutes > 0 ? +a.minutes * 60 : each;
+    map[a.id] = sec; total += sec;
+    out.push({ id: a.id, title: a.title, sec: sec });
+  });
+  return { items: out, map: map, total: total };
+}
+function isOverdue(t) { return t.status !== 'done' && !!t.dueDate && t.dueDate < todayStr(); }
+function taskSort(a, b) {
+  var da = a.status === 'done' ? 1 : 0, db = b.status === 'done' ? 1 : 0;
+  if (da !== db) return da - db;
+  var x = a.dueDate || '9999', y = b.dueDate || '9999';
+  if (x !== y) return x.localeCompare(y);
+  return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+}
+function ownerMatch(t, f) {
+  if (f === 'all') return true;
+  if (f === 'me') return t.owner === S.me || t.owner === 'Both';
+  return t.owner === f;
+}
+function statusMatch(t, f) {
+  if (f === 'all') return true;
+  if (f === 'active') return t.status !== 'done';
+  return t.status === f;
+}
+
+/* ---------------- Rendering ---------------- */
+function renderAll() {
+  renderHeader();
+  document.querySelectorAll('.tab').forEach(function (el) { el.classList.toggle('on', el.id === 'tab-' + S.tab); });
+  document.querySelectorAll('.nav-in button').forEach(function (b) { b.classList.toggle('on', b.dataset.v === S.tab); });
+  if (!S.loaded) {
+    $('#tab-' + S.tab).innerHTML = S.error
+      ? '<div class="card err"><h3>לא הצלחנו לטעון</h3><p class="muted">' + esc(S.error) + '</p><button class="btn primary" data-act="retry">נסו שוב</button></div>'
+      : '<div class="skel"></div><div class="skel" style="height:160px"></div><div class="skel"></div>';
+    $('#fab').hidden = true;
+    return;
+  }
+  renderToday(); renderAgenda(); renderTasks(); renderSummaries(); renderBadges();
+  $('#fab').hidden = !(S.tab === 'tasks' || S.tab === 'summaries' || S.tab === 'agenda');
+  tick();
+}
+
+function renderHeader() {
+  document.querySelectorAll('#who button').forEach(function (b) { b.classList.toggle('on', b.dataset.v === S.me); });
+}
+function setSync() {
+  var el = $('#sync');
+  el.className = 'sync' + (S.pending || S.refreshing ? ' busy' : '') + (S.error && !S.loaded ? ' bad' : '');
+  el.title = S.pending ? 'שומר…' : S.refreshing ? 'מרענן…' :
+    (S.lastSync ? 'עודכן ' + new Date(S.lastSync).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '');
+}
+function renderBadges() {
+  var open = agendaFor(nextMeeting()).length, od = S.data.tasks.filter(isOverdue).length;
+  var bA = $('#bAgenda'), bT = $('#bTasks');
+  bA.hidden = !open; bA.textContent = open;
+  bT.hidden = !od; bT.textContent = od;
+}
+
+function agendaRow(a, sec, o) {
+  o = o || {};
+  var link = safeUrl(a.link), discussed = a.status === 'discussed';
+  var src = a.source && a.source !== 'manual'
+    ? '<span class="chip">' + (SOURCE_ICON[a.source] || '•') + ' ' + esc(SOURCE[a.source] || a.source) + '</span>' : '';
+  return '<li class="item' + (a._pending ? ' pending' : '') + (discussed ? ' discussed' : '') + '">' +
+    '<button class="check' + (discussed ? ' on' : '') + '" data-act="' + (discussed ? 'agendaReopen' : 'agendaDone') +
+      '" data-id="' + esc(a.id) + '" aria-label="' + (discussed ? 'החזר לאג׳נדה' : 'סמן כנדון') + '">✓</button>' +
+    '<div class="item-body" data-act="agendaEdit" data-id="' + esc(a.id) + '">' +
+      '<div class="item-title">' + esc(a.title) + '</div>' +
+      '<div class="meta">' + src +
+        (a.from ? '<span class="chip gray">' + esc(a.from) + '</span>' : '') +
+        (link ? '<a class="chip" href="' + esc(link) + '" target="_blank" rel="noopener">פתח ↗</a>' : '') +
+        (o.showDate && a.date && a.date < todayStr() && !discussed ? '<span class="chip warn">נדחה מ-' + esc(shortDate(a.date)) + '</span>' : '') +
+        (a.createdBy ? '<span class="muted">· ' + esc(person(a.createdBy)) + '</span>' : '') +
+      '</div>' +
+      (a.details ? '<div class="item-notes">' + esc(a.details) + '</div>' : '') +
+    '</div>' +
+    (sec ? '<span class="tbox" title="זמן מוקצב">' + fmtMin(sec) + '</span>' : '') +
+    (o.reorder ? '<div class="reorder"><button class="icon-btn sm" data-act="agendaMove" data-dir="-1" data-id="' + esc(a.id) +
+      '" aria-label="למעלה">▲</button><button class="icon-btn sm" data-act="agendaMove" data-dir="1" data-id="' + esc(a.id) +
+      '" aria-label="למטה">▼</button></div>' : '') +
+  '</li>';
+}
+
+function taskRow(t) {
+  var od = isOverdue(t), done = t.status === 'done';
+  var soon = !done && t.dueDate && !od && t.dueDate <= addDays(todayStr(), 2);
+  return '<li class="item task' + (od ? ' overdue' : '') + (done ? ' done' : '') + (t._pending ? ' pending' : '') + '">' +
+    '<button class="check' + (done ? ' on' : '') + '" data-act="toggleTask" data-id="' + esc(t.id) + '" aria-label="' +
+      (done ? 'פתח מחדש' : 'סמן כהושלם') + '">✓</button>' +
+    '<div class="item-body" data-act="editTask" data-id="' + esc(t.id) + '">' +
+      '<div class="item-title">' + esc(t.title) + '</div>' +
+      '<div class="meta"><span class="chip own-' + esc(t.owner) + '">' + esc(person(t.owner)) + '</span>' +
+        (t.dueDate ? '<span class="chip ' + (od ? 'bad' : soon ? 'warn' : 'gray') + '">' + (od ? '⚠ באיחור · ' : '📅 ') + esc(dueLabel(t.dueDate)) + '</span>' : '') +
+        (t.status === 'in progress' ? '<span class="chip">⏳ בתהליך</span>' : '') +
+        (t.assignee ? '<span class="chip gray">👤 ' + esc(t.assignee) + '</span>' : '') +
+        (t._noMeeting ? '' : taskMeetingLabel(t)) +
+      '</div>' +
+      (t.notes ? '<div class="item-notes">' + esc(t.notes) + '</div>' : '') +
+    '</div></li>';
+}
+
+function taskMeetingLabel(t) {
+  var s = summaryByKey(t.meetingKey);
+  if (s) return '<span class="muted">מ: ' + esc((s.title || 'פגישה').slice(0, 40)) + ' · ' + esc(shortDate(s.date)) + '</span>';
+  return t.sourceMeetingDate ? '<span class="muted">מפגישה ' + esc(shortDate(t.sourceMeetingDate)) + '</span>' : '';
+}
+
+function meetingCard(m) {
+  if (!m) {
+    return '<section class="card meet"><div class="muted small">הפגישה הבאה</div><div class="meet-when">עוד לא נקבעה</div>' +
+      '<div class="meet-sub">ההצעה היומית לזמנים תופיע כאן אוטומטית.</div>' +
+      '<div class="meet-actions"><button class="btn" data-act="meetingEdit">+ קביעת פגישה</button></div></section>';
+  }
+  var inst = nyInstant(m.date, m.time), until = m.time ? untilLabel(inst) : '';
+  var loc = m.time ? localTime(inst) : '';
+  var teams = safeUrl(m.teamsLink), tldv = safeUrl(m.tldvLink);
+  var slots = String(m.slotOptions || '').split('|').map(function (s) { return s.trim(); }).filter(Boolean);
+  var slotHtml = '';
+  if (m.status === 'proposed' && slots.length) {
+    slotHtml = '<div class="small" style="margin-top:12px">' +
+      (m.pickedBy ? '✓ ' + esc(person(m.pickedBy)) + ' בחר/ה ' + esc(m.time) + ' · ממתין לזימון' : 'בחרו שעה שנוחה לכם (שעון ניו יורק):') + '</div>' +
+      '<div class="slots">' + slots.map(function (s) {
+        var tm = slotTime(s);
+        return '<button class="slot' + (tm === m.time && m.pickedBy ? ' on' : '') + '" data-act="pickSlot" data-v="' + esc(tm) + '">' + esc(tm) + '</button>';
+      }).join('') + '</div>';
+  }
+  return '<section class="card meet">' +
+    '<div style="display:flex;align-items:center;gap:8px"><span class="muted small grow">הפגישה הבאה</span>' +
+      '<span class="pill">' + esc(MEETING_STATUS[m.status] || m.status) + '</span></div>' +
+    '<div class="meet-when">' + esc(relDay(m.date)) + (m.time ? ' · <span dir="ltr">' + esc(m.time) + '</span>' : '') + '</div>' +
+    '<div class="meet-sub">' + (m.time ? 'שעון ניו יורק' + (loc ? ' · <span dir="ltr">' + esc(loc) + '</span> אצלך' : '') : 'שעה טרם נקבעה') +
+      (until ? ' · <b>' + esc(until) + '</b>' : '') + ' · ' + esc(m.durationMin || 15) + ' דק׳</div>' +
+    slotHtml +
+    '<div class="meet-actions">' +
+      (teams ? '<a class="btn primary" href="' + esc(teams) + '" target="_blank" rel="noopener">🎥 הצטרפות ל-Teams</a>' : '') +
+      (tldv ? '<a class="btn" href="' + esc(tldv) + '" target="_blank" rel="noopener">🎙️ tl;dv</a>' : '') +
+      '<button class="btn" data-act="meetingEdit" data-id="' + esc(m.id) + '">עריכה</button>' +
+    '</div></section>';
+}
+
+/* Timer state lives in localStorage so a reload/refresh never loses it. */
+function loadTimer() { try { return JSON.parse(localStorage.getItem('sync.timer') || 'null'); } catch (e) { return null; } }
+function saveTimer(t) { if (t) localStorage.setItem('sync.timer', JSON.stringify(t)); else localStorage.removeItem('sync.timer'); }
+function timerElapsed(t) { return t.base + (t.running ? (Date.now() - t.startedAt) / 1000 : 0); }
+function currentTimer(m) {
+  var t = loadTimer(), k = m ? m.date : todayStr();
+  if (t && t.k !== k && !t.running) { saveTimer(null); return null; }
+  return t;
+}
+
+function timerCard(m, alloc) {
+  var t = currentTimer(m);
+  var items = t ? t.items : alloc.items, idx = t ? t.idx : -1;
+  var finished = !!t && idx >= items.length;
+  return '<section class="card" id="timerCard">' +
+    '<div class="card-head"><h2>⏱ טיימר 15 דקות</h2><span class="muted small" id="tmState"></span></div>' +
+    '<div class="tm-main"><div class="tm-total" id="tmTotal">15:00</div><div class="tm-label" id="tmLabel">נותרו לשיחה</div></div>' +
+    '<div class="bar"><i id="tmTotalBar"></i></div>' +
+    '<div class="tm-item" id="tmItemBox"' + (t && !finished ? '' : ' hidden') + '>' +
+      '<div class="tm-item-row"><span class="tm-item-title" id="tmItemTitle"></span><span class="tm-item-time" id="tmItem"></span></div>' +
+      '<div class="bar sm"><i id="tmItemBar"></i></div></div>' +
+    (items.length ? '<ol class="tm-steps">' + items.map(function (it, i) {
+      return '<li class="' + (t && i < idx ? 'done' : t && i === idx ? 'cur' : '') + '"><span>' + (t && i < idx ? '✓ ' : (i + 1) + '. ') +
+        esc(it.title) + '</span><b>' + fmtMin(it.sec) + '</b></li>';
+    }).join('') + '</ol>' : '<div class="muted small" style="text-align:center;margin-top:8px">הוסיפו נושאים לאג׳נדה כדי לחלק את הזמן</div>') +
+    '<div class="tm-ctrl">' +
+      (!t || !t.running
+        ? '<button class="btn primary" data-act="timerStart"' + (finished ? ' disabled' : '') + '>▶ ' + (t && !finished ? 'המשך' : 'התחל') + '</button>'
+        : '<button class="btn" data-act="timerPause">⏸ השהה</button>') +
+      '<button class="btn" data-act="timerNext"' + (!t || finished ? ' disabled' : '') + '>⏭ הבא</button>' +
+      '<button class="btn ghost" data-act="timerReset"' + (!t ? ' disabled' : '') + '>↺ איפוס</button>' +
+    '</div></section>';
+}
+
+function renderToday() {
+  var m = nextMeeting(), items = agendaFor(m), alloc = allocate(items), t = todayStr();
+  var over = alloc.total > TOTAL_SEC;
+  var agenda = '<section class="card"><div class="card-head"><h2>🗂️ אג׳נדה' + (m ? ' לפגישה' : '') + '</h2>' +
+    '<span class="chip ' + (over ? 'bad' : 'gray') + '">' + Math.round(alloc.total / 60) + ' / 15 דק׳</span></div>' +
+    (items.length ? '<ul class="list">' + items.map(function (a) { return agendaRow(a, alloc.map[a.id], { showDate: true }); }).join('') + '</ul>'
+      : '<div class="empty">אין עדיין נושאים. הוסיפו נושא 👇</div>') +
+    (over ? '<div class="small" style="color:var(--bad);margin-top:6px">הזמן המוקצב חורג מ-15 דקות. קצרו או דחו נושא.</div>' : '') +
+    '<form class="quick" data-form="quickAgenda" autocomplete="off"><input name="title" placeholder="נושא חדש לאג׳נדה…" required maxlength="500">' +
+    '<input type="hidden" name="date" value="' + esc(m ? m.date : '') + '"><button class="btn primary sm" type="submit">הוסף</button></form></section>';
+
+  var soon = S.data.tasks.filter(function (x) { return x.status !== 'done' && x.dueDate && x.dueDate <= addDays(t, 2); }).sort(taskSort);
+  var openCount = S.data.tasks.filter(function (x) { return x.status !== 'done'; }).length;
+  var tasks = '<section class="card"><div class="card-head"><h2>✅ משימות קרובות</h2>' +
+    '<button class="btn ghost sm" data-act="tab" data-v="tasks">כל הפתוחות (' + openCount + ')</button></div>' +
+    (soon.length ? '<ul class="list">' + soon.slice(0, 8).map(taskRow).join('') + '</ul>' : '<div class="empty">אין משימות שמועד היעד שלהן קרוב 🎉</div>') +
+    '</section>';
+
+  $('#tab-today').innerHTML = meetingCard(m) + timerCard(m, alloc) + agenda + tasks;
+}
+
+function renderAgenda() {
+  var d = defaultAgendaDate(), m = nextMeeting();
+  var groups = {};
+  S.data.agenda.filter(function (a) { return a.status !== 'discussed'; }).forEach(function (a) {
+    var k = agendaGroupKey(a, m); (groups[k] = groups[k] || []).push(a);
+  });
+  var keys = Object.keys(groups).sort(function (a, b) { return a === 'next' ? -1 : b === 'next' ? 1 : a.localeCompare(b); });
+  var discussed = S.data.agenda.filter(function (a) { return a.status === 'discussed'; })
+    .sort(function (a, b) { return String(b.updatedAt).localeCompare(String(a.updatedAt)); }).slice(0, 25);
+
+  var html = '<div class="page-title">🗂️ אג׳נדה</div>' +
+    '<section class="card"><form data-form="agendaAdd" autocomplete="off">' +
+    '<label class="fld"><span>נושא חדש</span><input name="title" required maxlength="500" placeholder="על מה כדאי לדבר?"></label>' +
+    '<div class="row2"><label class="fld"><span>לפגישה בתאריך</span><input type="date" name="date" value="' + esc(d) + '"></label>' +
+    '<label class="fld"><span>דקות (לא חובה)</span><input type="number" name="minutes" min="1" max="15" inputmode="numeric" placeholder="אוטומטי"></label></div>' +
+    '<details class="more"><summary>+ פרטים וקישור</summary>' +
+    '<label class="fld"><span>פרטים</span><textarea name="details" rows="2"></textarea></label>' +
+    '<label class="fld"><span>קישור</span><input type="url" name="link" placeholder="https://"></label></details>' +
+    '<button class="btn primary big" type="submit">הוספה לאג׳נדה</button></form></section>';
+
+  if (!keys.length) html += '<div class="card empty">האג׳נדה ריקה. כל אחד מכם יכול להוסיף נושאים לפגישה הבאה.</div>';
+  keys.forEach(function (k) {
+    var list = groups[k].sort(agendaSort);
+    var map = k === 'next' ? allocate(list).map : {};
+    html += '<div class="group-title">' + (k === 'next' ? 'לפגישה הקרובה' + (m ? ' · ' + esc(relDay(m.date)) : '') : esc(relDay(k))) + ' (' + list.length + ')</div>' +
+      '<section class="card"><ul class="list">' + list.map(function (a) { return agendaRow(a, map[a.id], { reorder: true, showDate: true }); }).join('') + '</ul></section>';
+  });
+  if (discussed.length) {
+    html += '<details class="card" style="padding:12px 16px"><summary class="muted" style="cursor:pointer">נושאים שנדונו (' + discussed.length + ')</summary>' +
+      '<ul class="list" style="margin-top:8px">' + discussed.map(function (a) { return agendaRow(a); }).join('') + '</ul></details>';
+  }
+  $('#tab-agenda').innerHTML = html;
+}
+
+function renderTasks() {
+  var all = S.data.tasks, f = S.f;
+  var owners = [['all', 'כולם'], ['me', 'שלי'], ['Dror', 'דרור'], ['Shachar', 'שחר'], ['Both', 'שנינו']];
+  var statuses = [['active', 'פתוחות'], ['in progress', 'בתהליך'], ['done', 'הושלמו'], ['all', 'הכל']];
+  var countO = function (o) { return all.filter(function (t) { return ownerMatch(t, o) && statusMatch(t, f.status); }).length; };
+  var countS = function (s) { return all.filter(function (t) { return ownerMatch(t, f.owner) && statusMatch(t, s); }).length; };
+  var list = all.filter(function (t) { return ownerMatch(t, f.owner) && statusMatch(t, f.status); }).sort(taskSort);
+  var od = list.filter(isOverdue).length;
+
+  $('#tab-tasks').innerHTML = '<div class="page-title">✅ משימות' + (od ? ' <span class="chip bad">' + od + ' באיחור</span>' : '') + '</div>' +
+    '<div class="chips">' + owners.map(function (o) {
+      if (o[0] === 'me' && !S.me) return '';
+      return '<button class="fchip' + (f.owner === o[0] ? ' on' : '') + '" data-act="fOwner" data-v="' + o[0] + '">' + o[1] + '<span class="n">' + countO(o[0]) + '</span></button>';
+    }).join('') + '</div>' +
+    '<div class="chips">' + statuses.map(function (s) {
+      return '<button class="fchip' + (f.status === s[0] ? ' on' : '') + '" data-act="fStatus" data-v="' + s[0] + '">' + s[1] + '<span class="n">' + countS(s[0]) + '</span></button>';
+    }).join('') + '</div>' +
+    '<section class="card">' + (list.length ? '<ul class="list">' + list.map(taskRow).join('') + '</ul>'
+      : '<div class="empty">אין משימות בסינון הזה.<br><button class="btn primary sm" style="margin-top:10px" data-act="newTask">+ משימה חדשה</button></div>') +
+    '</section>';
+}
+
+function filteredSummaries() {
+  var q = S.sumQ.trim().toLowerCase(), mo = S.sumMonth;
+  return S.data.summaries.filter(function (s) {
+    if (mo && String(s.date || '').slice(0, 7) !== mo) return false;
+    if (!q) return true;
+    return [s.title, s.summaryBullets, s.decisions].join('\n').toLowerCase().indexOf(q) >= 0;
+  }).sort(sumSort);
+}
+
+function summaryCard(s, open) {
+  var tasks = S.data.tasks.filter(function (t) { return t.meetingKey && t.meetingKey === s.meetingKey; }).sort(taskSort);
+  var openTasks = tasks.filter(function (t) { return t.status !== 'done'; }).length;
+  var bullets = splitLines(s.summaryBullets), dec = splitLines(s.decisions), link = safeUrl(s.tldvUrl);
+  return '<details class="card sum" data-sid="' + esc(s.id) + '"' + (open ? ' open' : '') + '><summary><div>' +
+    '<div class="sum-title">' + esc(s.title || 'פגישה') + '</div>' +
+    '<div class="muted small">' + esc(relDay(s.date)) + (s.time ? ' · <span dir="ltr">' + esc(s.time) + '</span>' : '') +
+      ' · ' + dec.length + ' החלטות · ' + tasks.length + ' משימות' + (openTasks ? ' (' + openTasks + ' פתוחות)' : '') + '</div>' +
+    '</div><span class="chev">⌄</span></summary>' +
+    (open ? summaryBody(s, tasks, bullets, dec, link) : '') + '</details>';
+}
+function summaryBody(s, tasks, bullets, dec, link) {
+  return '<div class="sum-body' + (s._pending ? ' pending' : '') + '">' +
+    (bullets.length ? '<h4>סיכום</h4><ul class="bul">' + bullets.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') +
+    (dec.length ? '<h4>החלטות</h4><ul class="bul">' + dec.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') +
+    (tasks.length ? '<h4>משימות</h4><ul class="list">' + tasks.map(function (t) { return taskRow(Object.assign({}, t, { _noMeeting: true })); }).join('') + '</ul>' : '') +
+    '<div class="sum-foot">' + (link ? '<a class="btn sm" href="' + esc(link) + '" target="_blank" rel="noopener">🎙️ tl;dv ↗</a>' : '') +
+    '<span class="grow"></span><button class="btn ghost sm" data-act="taskForMeeting" data-v="' + esc(s.meetingKey) + '">+ משימה</button>' +
+    '<button class="btn ghost sm" data-act="summaryEdit" data-id="' + esc(s.id) + '">עריכה</button></div></div>';
+}
+
+/* Controls are rendered once (so typing in search keeps focus); only the list re-renders. */
+function renderSummaries() {
+  var host = $('#tab-summaries');
+  if (!$('#sumList', host)) {
+    host.innerHTML = '<div class="page-title">📝 סיכומי פגישות <span class="chip gray" id="sumCount"></span></div>' +
+      '<div class="sum-tools"><input type="search" id="sumQ" placeholder="חיפוש לפי כותרת או תוכן…" autocomplete="off">' +
+      '<select id="sumMonth" aria-label="חודש"></select></div><div id="sumList"></div>';
+    $('#sumQ').addEventListener('input', function () { S.sumQ = this.value; S.sumLimit = 25; renderSumList(); });
+    $('#sumMonth').addEventListener('change', function () {
+      S.sumMonth = this.value; S.sumLimit = 25; localStorage.setItem('sync.sumMonth', S.sumMonth); renderSumList();
+    });
+  }
+  var months = {};
+  S.data.summaries.forEach(function (s) { if (s.date) months[String(s.date).slice(0, 7)] = (months[String(s.date).slice(0, 7)] || 0) + 1; });
+  if (S.sumMonth && !months[S.sumMonth]) S.sumMonth = '';
+  var sel = $('#sumMonth');
+  sel.innerHTML = '<option value="">כל החודשים</option>' + Object.keys(months).sort().reverse().map(function (m) {
+    return '<option value="' + m + '"' + (m === S.sumMonth ? ' selected' : '') + '>' + esc(monthLabel(m)) + ' (' + months[m] + ')</option>';
+  }).join('');
+  renderSumList();
+}
+function renderSumList() {
+  var all = filteredSummaries(), list = all.slice(0, S.sumLimit), html = '', lastMonth = '';
+  $('#sumCount').textContent = all.length + (all.length !== S.data.summaries.length ? ' / ' + S.data.summaries.length : '');
+  if (!S.data.summaries.length) html = '<div class="card empty">עדיין אין סיכומים. אחרי כל שיחה הסיכום מ-tl;dv יופיע כאן.</div>';
+  else if (!all.length) html = '<div class="card empty">לא נמצאו פגישות תואמות.</div>';
+  list.forEach(function (s, i) {
+    var mo = String(s.date || '').slice(0, 7);
+    if (mo && mo !== lastMonth && !S.sumMonth) { html += '<div class="month-title">' + esc(monthLabel(mo)) + '</div>'; lastMonth = mo; }
+    var open = S.openSum[s.id] !== undefined ? S.openSum[s.id] : (i === 0 && !S.sumQ);
+    html += summaryCard(s, open);
+  });
+  if (all.length > list.length) html += '<button class="btn more-btn" data-act="sumMore">הצגת עוד ' + Math.min(25, all.length - list.length) + ' (מתוך ' + (all.length - list.length) + ')</button>';
+  $('#sumList').innerHTML = html;
+}
+
+/* ---------------- Timer tick + sound ---------------- */
+var actx = null;
+function unlockAudio() {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+  } catch (e) { actx = null; }
+}
+function beep(times) {
+  times = times || 1;
+  try { if (navigator.vibrate) navigator.vibrate(times > 1 ? [200, 100, 200, 100, 200] : 200); } catch (e) {}
+  if (!actx) return;
+  for (var i = 0; i < times; i++) {
+    var o = actx.createOscillator(), g = actx.createGain(), t0 = actx.currentTime + i * 0.35;
+    o.frequency.value = 880; o.connect(g); g.connect(actx.destination);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.3, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.28); o.start(t0); o.stop(t0 + 0.3);
+  }
+}
+function tick() {
+  var el = $('#tmTotal');
+  if (!el || S.tab !== 'today') return;
+  var t = currentTimer(nextMeeting());
+  var bar = $('#tmTotalBar'), st = $('#tmState');
+  if (!t) { el.textContent = '15:00'; el.className = 'tm-total'; bar.style.width = '0'; st.textContent = ''; return; }
+  var e = timerElapsed(t), rem = TOTAL_SEC - e;
+  el.textContent = fmtClock(rem);
+  el.className = 'tm-total' + (rem < 0 ? ' over' : rem < 120 ? ' warn' : '');
+  $('#tmLabel').textContent = rem < 0 ? 'חריגה מהזמן' : 'נותרו לשיחה';
+  bar.style.width = Math.min(100, e / TOTAL_SEC * 100) + '%';
+  bar.className = rem < 0 ? 'over' : rem < 120 ? 'warn' : '';
+  st.textContent = t.running ? '● פועל' : (t.idx >= t.items.length ? 'הסתיים' : 'מושהה');
+  if (rem <= 0 && t.running && !S.alert.total) { S.alert.total = true; beep(3); }
+  var it = t.items[t.idx];
+  if (it) {
+    var ie = e - t.itemStart, ir = it.sec - ie;
+    $('#tmItemTitle').textContent = (t.idx + 1) + '. ' + it.title;
+    var ti = $('#tmItem'); ti.textContent = fmtClock(ir); ti.className = 'tm-item-time' + (ir < 0 ? ' over' : '');
+    var ib = $('#tmItemBar'); ib.style.width = Math.min(100, ie / it.sec * 100) + '%'; ib.className = ir < 0 ? 'over' : ir < 30 ? 'warn' : '';
+    if (ir <= 0 && t.running && S.alert.item !== t.idx) { S.alert.item = t.idx; beep(1); }
+  }
+}
+
+/* ---------------- Modal + toast ---------------- */
+function openModal(title, inner, onSubmit, opts) {
+  opts = opts || {};
+  var m = $('#modal');
+  m.innerHTML = '<div class="sheet" role="dialog" aria-modal="true"><form id="modalForm" autocomplete="off">' +
+    '<div class="sheet-head"><h3>' + esc(title) + '</h3>' + (opts.noClose ? '' : '<button type="button" class="icon-btn" data-act="closeModal" aria-label="סגור">✕</button>') + '</div>' +
+    '<div class="sheet-body">' + inner + '</div>' +
+    (opts.noFooter ? '' : '<div class="sheet-foot">' + (opts.extra || '') + '<span class="grow"></span>' +
+      '<button type="button" class="btn ghost" data-act="closeModal">ביטול</button><button type="submit" class="btn primary">שמירה</button></div>') +
+    '</form></div>';
+  m.hidden = false; m.dataset.lock = opts.noClose ? '1' : '';
+  S.modalSubmit = onSubmit;
+  document.body.classList.add('noscroll');
+  var first = m.querySelector('input:not([type=hidden]),textarea');
+  if (first && window.matchMedia('(min-width:700px)').matches) first.focus();
+}
+function closeModal() {
+  var m = $('#modal'); m.hidden = true; m.innerHTML = ''; m.dataset.lock = ''; S.modalSubmit = null;
+  document.body.classList.remove('noscroll');
+}
+var toastTimer = null;
+function toast(msg, bad) {
+  var el = $('#toast'); el.textContent = msg; el.className = 'toast' + (bad ? ' bad' : ''); el.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.hidden = true; }, bad ? 5000 : 2500);
+}
+function formData(f) {
+  var o = {};
+  new FormData(f).forEach(function (v, k) { o[k] = typeof v === 'string' ? v.trim() : v; });
+  return o;
+}
+function guardTemp(id) { if (isTmp(id)) { toast('רגע, עדיין שומר…'); return true; } return false; }
+function meetingOpts(sel) {
+  var list = S.data.summaries.slice().sort(sumSort).slice(0, 80);
+  var html = list.map(function (s) {
+    return '<option value="' + esc(s.meetingKey) + '"' + (s.meetingKey === sel ? ' selected' : '') + '>' +
+      esc(shortDate(s.date) + ' · ' + (s.title || 'פגישה').slice(0, 40)) + '</option>';
+  }).join('');
+  if (sel && !list.some(function (s) { return s.meetingKey === sel; })) html += '<option value="' + esc(sel) + '" selected>' + esc(sel) + '</option>';
+  return html;
+}
+
+/* ---------------- Forms ---------------- */
+function openWho() {
+  openModal('מי משתמש/ת באפליקציה?',
+    '<p class="muted" style="margin-top:0">כדי שנדע מי הוסיף כל משימה ונושא. אפשר להחליף בכל רגע בכפתור למעלה.</p>' +
+    '<div class="who-btns"><button type="button" class="btn" data-act="setMe" data-v="Dror"><span style="font-size:1.8rem">👨‍💼</span>דרור</button>' +
+    '<button type="button" class="btn" data-act="setMe" data-v="Shachar"><span style="font-size:1.8rem">🧑‍💻</span>שחר</button></div>',
+    null, { noFooter: true, noClose: true });
+}
+
+function openTaskModal(t, preset) {
+  var x = t || Object.assign({ owner: S.me || 'Both', status: 'open' }, preset || {});
+  var inner =
+    '<label class="fld"><span>משימה</span><input name="title" required maxlength="500" value="' + esc(x.title || '') + '" placeholder="מה צריך לעשות?"></label>' +
+    '<div class="row2"><label class="fld"><span>אחראי/ת</span><select name="owner">' + opt(OWNER_OPTS, x.owner || 'Both') + '</select></label>' +
+    '<label class="fld"><span>תאריך יעד</span><input type="date" name="dueDate" value="' + esc(x.dueDate || '') + '"></label></div>' +
+    '<div class="row2"><label class="fld"><span>סטטוס</span><select name="status">' + opt(TASK_STATUS, x.status || 'open') + '</select></label>' +
+    '<label class="fld"><span>אחראי/ת חיצוני/ת</span><input name="assignee" maxlength="200" value="' + esc(x.assignee || '') + '" placeholder="לא חובה"></label></div>' +
+    '<label class="fld"><span>מפגישה</span><select name="meetingKey"><option value="">—</option>' + meetingOpts(x.meetingKey) + '</select></label>' +
+    '<label class="fld"><span>הערות</span><textarea name="notes" rows="3">' + esc(x.notes || '') + '</textarea></label>' +
+    (t ? '<div class="muted small">נוצרה ע״י ' + esc(person(t.createdBy)) + (t.createdAt ? ' · ' + esc(String(t.createdAt).slice(0, 16)) : '') + '</div>' : '');
+  openModal(t ? 'עריכת משימה' : 'משימה חדשה', inner, function (d) {
+    var ms = summaryByKey(d.meetingKey);
+    var patch = { title: d.title, owner: d.owner, assignee: d.assignee, dueDate: d.dueDate, status: d.status, notes: d.notes,
+      meetingKey: d.meetingKey, sourceMeetingDate: ms ? ms.date : (t && t.meetingKey === d.meetingKey ? t.sourceMeetingDate || '' : '') };
+    if (t) {
+      mutate('tasks', function () { var r = byId('tasks', t.id); if (r) Object.assign(r, patch, { updatedAt: nowStamp() }); },
+        'updateTask', Object.assign({ id: t.id }, patch));
+    } else {
+      var id = tmpId();
+      mutate('tasks', function () {
+        S.data.tasks.push(Object.assign({ id: id, _pending: true, createdBy: me(), createdAt: nowStamp(), updatedAt: nowStamp() }, patch));
+      }, 'addTask', Object.assign({ createdBy: me() }, patch), { tempId: id });
+    }
+  }, { extra: t ? '<button type="button" class="btn danger" data-act="deleteTask" data-id="' + esc(t.id) + '">מחיקה</button>' : '' });
+}
+
+function addAgenda(d) {
+  if (!d.title) return;
+  var id = tmpId();
+  var rec = { title: d.title, date: d.date || '', minutes: d.minutes || '', details: d.details || '', link: d.link || '', source: 'manual' };
+  mutate('agenda', function () {
+    S.data.agenda.push(Object.assign({ id: id, _pending: true, status: 'open', createdBy: me(), createdAt: nowStamp(), updatedAt: nowStamp() }, rec));
+  }, 'addAgendaItem', Object.assign({ createdBy: me() }, rec), { tempId: id });
+}
+
+function openAgendaModal(a) {
+  var inner =
+    '<label class="fld"><span>נושא</span><input name="title" required maxlength="500" value="' + esc(a.title) + '"></label>' +
+    '<div class="row2"><label class="fld"><span>תאריך פגישה</span><input type="date" name="date" value="' + esc(a.date || '') + '"></label>' +
+    '<label class="fld"><span>דקות</span><input type="number" name="minutes" min="1" max="15" value="' + esc(a.minutes || '') + '" placeholder="אוטומטי"></label></div>' +
+    '<label class="fld"><span>פרטים</span><textarea name="details" rows="3">' + esc(a.details || '') + '</textarea></label>' +
+    '<label class="fld"><span>קישור</span><input type="url" name="link" value="' + esc(a.link || '') + '" placeholder="https://"></label>' +
+    '<label class="fld"><span>סטטוס</span><select name="status">' + opt({ open: 'פתוח', discussed: 'נדון' }, a.status || 'open') + '</select></label>' +
+    '<div class="muted small">' + (a.source && a.source !== 'manual' ? 'מקור: ' + esc(SOURCE[a.source] || a.source) + (a.from ? ' · ' + esc(a.from) : '') + ' · ' : '') +
+      'נוסף ע״י ' + esc(person(a.createdBy)) + '</div>';
+  openModal('עריכת נושא', inner, function (d) {
+    var patch = { title: d.title, date: d.date, minutes: d.minutes, details: d.details, link: d.link, status: d.status };
+    mutate('agenda', function () { var r = byId('agenda', a.id); if (r) Object.assign(r, patch, { updatedAt: nowStamp() }); },
+      'updateAgendaItem', Object.assign({ id: a.id }, patch));
+  }, { extra: '<button type="button" class="btn danger" data-act="deleteAgenda" data-id="' + esc(a.id) + '">מחיקה</button>' });
+}
+
+function openMeetingModal(m) {
+  var x = m || { date: nextWorkday(todayStr()), time: '', status: 'proposed', durationMin: '15' };
+  var inner =
+    '<div class="row2"><label class="fld"><span>תאריך</span><input type="date" name="date" required value="' + esc(x.date || '') + '"></label>' +
+    '<label class="fld"><span>שעה (ניו יורק)</span><input type="time" name="time" value="' + esc(x.time || '') + '"></label></div>' +
+    '<div class="row2"><label class="fld"><span>סטטוס</span><select name="status">' + opt(MEETING_STATUS, x.status || 'proposed') + '</select></label>' +
+    '<label class="fld"><span>משך (דק׳)</span><input type="number" name="durationMin" min="5" max="120" value="' + esc(x.durationMin || '15') + '"></label></div>' +
+    '<label class="fld"><span>קישור Teams</span><input type="url" name="teamsLink" value="' + esc(x.teamsLink || '') + '" placeholder="https://teams.microsoft.com/…"></label>' +
+    '<label class="fld"><span>חלופות זמנים (מופרדות ב-|)</span><input name="slotOptions" value="' + esc(x.slotOptions || '') + '" placeholder="10:00 | 13:30 | 16:00" dir="ltr"></label>' +
+    '<label class="fld"><span>קישור tl;dv</span><input type="url" name="tldvLink" value="' + esc(x.tldvLink || '') + '"></label>' +
+    '<label class="fld"><span>הערות</span><textarea name="notes" rows="2">' + esc(x.notes || '') + '</textarea></label>';
+  openModal(m ? 'עריכת פגישה' : 'פגישה חדשה', inner, function (d) {
+    if (m) {
+      mutate('meetings', function () { var r = byId('meetings', m.id); if (r) Object.assign(r, d, { updatedAt: nowStamp() }); },
+        'upsertMeeting', Object.assign({ id: m.id }, d));
+    } else {
+      var id = tmpId();
+      mutate('meetings', function () { S.data.meetings.push(Object.assign({ id: id, _pending: true, createdAt: nowStamp() }, d)); },
+        'upsertMeeting', d, { tempId: id, after: function () { S.needRefresh = true; } });
+    }
+  }, { extra: m ? '<button type="button" class="btn danger" data-act="deleteMeeting" data-id="' + esc(m.id) + '">מחיקה</button>' : '' });
+}
+
+function openSummaryModal(s) {
+  var x = s || { date: lastMeetingDate(), time: '', title: 'סנכרון יומי דרור · שחר' };
+  var hasDaily = function (d) { return S.data.meetings.some(function (m) { return m.date === d && m.status !== 'cancelled'; }); };
+  var inner =
+    '<label class="fld"><span>כותרת הפגישה</span><input name="title" required maxlength="500" value="' + esc(x.title || '') + '"></label>' +
+    '<div class="row2"><label class="fld"><span>תאריך</span><input type="date" name="date" required value="' + esc(x.date || '') + '"></label>' +
+    '<label class="fld"><span>שעה (ניו יורק)</span><input type="time" name="time" value="' + esc(x.time || '') + '"></label></div>' +
+    '<label class="fld"><span>סיכום (שורה לכל נקודה)</span><textarea name="summaryBullets" rows="7" required>' + esc(x.summaryBullets || '') + '</textarea></label>' +
+    '<label class="fld"><span>החלטות (שורה לכל החלטה)</span><textarea name="decisions" rows="4">' + esc(x.decisions || '') + '</textarea></label>' +
+    '<label class="fld"><span>קישור tl;dv</span><input type="url" name="tldvUrl" value="' + esc(x.tldvUrl || '') + '"></label>' +
+    (s ? '' : '<label class="fld" style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="isDailySync" value="1"' +
+      (hasDaily(x.date) ? ' checked' : '') + ' style="width:auto;min-height:0"><span style="margin:0">זו שיחת הסנכרון היומית (מסמן את הפגישה כהתקיימה)</span></label>');
+  openModal(s ? 'עריכת סיכום' : 'סיכום חדש', inner, function (d) {
+    var fields = { title: d.title, date: d.date, time: d.time, summaryBullets: d.summaryBullets, decisions: d.decisions, tldvUrl: d.tldvUrl };
+    var payload = Object.assign({ createdBy: me() }, fields);
+    if (s) {
+      payload.id = s.id; // server keeps the existing meetingKey on edit, so linked tasks stay linked
+      mutate('summaries', function () { var r = byId('summaries', s.id); if (r) Object.assign(r, fields); }, 'addSummary', payload);
+    } else {
+      var key = meetingKeyOf(d.date, d.time, d.title), target = summaryByKey(key), id = target ? target.id : tmpId();
+      payload.isDailySync = !!d.isDailySync;
+      mutate('summaries', function () {
+        var r = target ? byId('summaries', target.id) : null;
+        if (r) Object.assign(r, fields);
+        else S.data.summaries.push(Object.assign({ id: id, _pending: true, meetingKey: key, createdBy: me(), createdAt: nowStamp() }, fields));
+      }, 'addSummary', payload, { tempId: id, after: function () { if (payload.isDailySync) S.needRefresh = true; } });
+    }
+  }, { extra: s ? '<button type="button" class="btn danger" data-act="deleteSummary" data-id="' + esc(s.id) + '">מחיקה</button>' : '' });
+}
+
+function removeRec(coll, action, id, label) {
+  if (guardTemp(id) || !confirm('למחוק את ' + label + '?')) return;
+  closeModal();
+  mutate(coll, function () { S.data[coll] = S.data[coll].filter(function (x) { return x.id !== id; }); }, action, { id: id });
+}
+
+function setAgendaStatus(id, status) {
+  if (guardTemp(id)) return;
+  mutate('agenda', function () { var a = byId('agenda', id); if (a) { a.status = status; a.updatedAt = nowStamp(); } },
+    'updateAgendaItem', { id: id, status: status });
+}
+
+/* ---------------- Actions ---------------- */
+var ACT = {
+  tab: function (d) { S.tab = d.v; localStorage.setItem('sync.tab', S.tab); renderAll(); window.scrollTo(0, 0); },
+  setMe: function (d) {
+    S.me = d.v; localStorage.setItem('sync.me', S.me);
+    if ($('#modal').dataset.lock) closeModal();
+    toast('שלום ' + person(S.me) + ' 👋'); renderAll();
+  },
+  retry: function () { S.error = ''; renderAll(); refresh(); },
+  closeModal: function () { closeModal(); },
+  fOwner: function (d) { S.f.owner = d.v; localStorage.setItem('sync.fOwner', d.v); renderTasks(); },
+  fStatus: function (d) { S.f.status = d.v; localStorage.setItem('sync.fStatus', d.v); renderTasks(); },
+
+  newTask: function () { openTaskModal(null); },
+  taskForMeeting: function (d) { openTaskModal(null, { meetingKey: d.v }); },
+  sumMore: function () { S.sumLimit += 25; renderSumList(); },
+  editTask: function (d) { var t = byId('tasks', d.id); if (t && !guardTemp(t.id)) openTaskModal(t); },
+  toggleTask: function (d) {
+    var t = byId('tasks', d.id); if (!t || guardTemp(t.id)) return;
+    var st = t.status === 'done' ? 'open' : 'done';
+    mutate('tasks', function () { var r = byId('tasks', d.id); r.status = st; r.updatedAt = nowStamp(); }, 'updateTask', { id: t.id, status: st });
+    if (st === 'done') toast('כל הכבוד ✓');
+  },
+  deleteTask: function (d) { removeRec('tasks', 'deleteTask', d.id, 'המשימה'); },
+
+  agendaDone: function (d) { setAgendaStatus(d.id, 'discussed'); },
+  agendaReopen: function (d) { setAgendaStatus(d.id, 'open'); },
+  agendaEdit: function (d) { var a = byId('agenda', d.id); if (a && !guardTemp(a.id)) openAgendaModal(a); },
+  deleteAgenda: function (d) { removeRec('agenda', 'deleteAgendaItem', d.id, 'הנושא'); },
+  agendaMove: function (d) {
+    var a = byId('agenda', d.id); if (!a || guardTemp(a.id)) return;
+    var m = nextMeeting(), k = agendaGroupKey(a, m);
+    var group = S.data.agenda.filter(function (x) { return x.status !== 'discussed' && agendaGroupKey(x, m) === k; }).sort(agendaSort);
+    var i = group.indexOf(a), j = i + Number(d.dir);
+    if (j < 0 || j >= group.length) return;
+    if (group.some(function (x) { return isTmp(x.id); })) { toast('רגע, עדיין שומר…'); return; }
+    group.splice(i, 1); group.splice(j, 0, a);
+    var ids = group.map(function (x) { return x.id; });
+    mutate('agenda', function () {
+      ids.forEach(function (id, n) { var r = byId('agenda', id); if (r) r.order = String(n + 1); });
+    }, 'reorderAgenda', { ids: ids });
+  },
+
+  meetingEdit: function (d) { var m = d.id ? byId('meetings', d.id) : null; if (m && guardTemp(m.id)) return; openMeetingModal(m); },
+  deleteMeeting: function (d) { removeRec('meetings', 'deleteMeeting', d.id, 'הפגישה'); },
+  pickSlot: function (d) {
+    var m = nextMeeting(); if (!m || guardTemp(m.id)) return;
+    mutate('meetings', function () { var r = byId('meetings', m.id); r.time = d.v; r.pickedBy = me(); },
+      'upsertMeeting', { id: m.id, time: d.v, pickedBy: me() });
+    toast('נבחרה השעה ' + d.v + ' · הזימון יישלח בהמשך');
+  },
+
+  summaryEdit: function (d) { var s = byId('summaries', d.id); if (s && !guardTemp(s.id)) openSummaryModal(s); },
+  deleteSummary: function (d) { removeRec('summaries', 'deleteSummary', d.id, 'הסיכום'); },
+
+  timerStart: function () {
+    unlockAudio();
+    var m = nextMeeting(), t = currentTimer(m);
+    if (!t) {
+      var alloc = allocate(agendaFor(m));
+      t = { k: m ? m.date : todayStr(), items: alloc.items.length ? alloc.items : [{ id: '', title: 'שיחה פתוחה', sec: TOTAL_SEC }],
+        idx: 0, base: 0, itemStart: 0, running: false, startedAt: 0 };
+      S.alert = {};
+    }
+    t.running = true; t.startedAt = Date.now(); saveTimer(t); renderToday(); tick();
+  },
+  timerPause: function () {
+    var t = loadTimer(); if (!t) return;
+    t.base = timerElapsed(t); t.running = false; saveTimer(t); renderToday(); tick();
+  },
+  timerNext: function () {
+    var t = loadTimer(); if (!t) return;
+    var it = t.items[t.idx], rec = it && it.id ? byId('agenda', it.id) : null;
+    t.idx++; t.itemStart = timerElapsed(t);
+    if (t.idx >= t.items.length) { t.base = timerElapsed(t); t.running = false; toast('סיימתם את האג׳נדה 🎉'); }
+    saveTimer(t);
+    if (rec && rec.status !== 'discussed' && !isTmp(rec.id)) setAgendaStatus(rec.id, 'discussed'); // also re-renders
+    else renderToday();
+    tick();
+  },
+  timerReset: function () {
+    var t = loadTimer();
+    if (t && t.running && !confirm('לאפס את הטיימר?')) return;
+    saveTimer(null); S.alert = {}; renderToday(); tick();
+  }
+};
+
+/* ---------------- Events ---------------- */
+document.addEventListener('click', function (e) {
+  if (e.target.closest('a[href]')) return; // let links open normally
+  var el = e.target.closest('[data-act]');
+  if (!el) return;
+  var fn = ACT[el.dataset.act];
+  if (fn) { e.preventDefault(); fn(el.dataset, el, e); }
+});
+document.addEventListener('submit', function (e) {
+  var f = e.target;
+  e.preventDefault();
+  if (f.id === 'modalForm') {
+    var cb = S.modalSubmit;
+    if (!cb) return;
+    var r = cb(formData(f));
+    if (r !== false) closeModal();
+    return;
+  }
+  var d = formData(f);
+  if (f.dataset.form === 'quickAgenda') { f.reset(); addAgenda(d); }
+  else if (f.dataset.form === 'agendaAdd') { f.reset(); addAgenda(d); toast('נוסף לאג׳נדה ✓'); }
+});
+document.addEventListener('toggle', function (e) {
+  var el = e.target;
+  if (!el || !el.dataset || !el.dataset.sid) return;
+  S.openSum[el.dataset.sid] = el.open;
+  if (el.open && !el.querySelector('.sum-body')) {
+    var s = byId('summaries', el.dataset.sid);
+    if (s) {
+      var tasks = S.data.tasks.filter(function (t) { return t.meetingKey && t.meetingKey === s.meetingKey; }).sort(taskSort);
+      el.insertAdjacentHTML('beforeend', summaryBody(s, tasks, splitLines(s.summaryBullets), splitLines(s.decisions), safeUrl(s.tldvUrl)));
+    }
+  }
+}, true);
+$('#modal').addEventListener('click', function (e) { if (e.target === this && !this.dataset.lock) closeModal(); });
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('#modal').hidden && !$('#modal').dataset.lock) closeModal(); });
+$('#fab').addEventListener('click', function () {
+  if (S.tab === 'tasks') openTaskModal(null);
+  else if (S.tab === 'summaries') openSummaryModal(null);
+  else if (S.tab === 'agenda') { var i = $('#tab-agenda input[name=title]'); if (i) { i.scrollIntoView({ block: 'center' }); i.focus(); } }
+});
+document.addEventListener('visibilitychange', function () {
+  if (!document.hidden && Date.now() - S.lastSync > 20000) refresh();
+});
+
+
+function showKeyPrompt() {
+  document.body.innerHTML =
+    '<div dir="rtl" style="font-family:system-ui,Arial,sans-serif;max-width:420px;margin:12vh auto;padding:24px;text-align:center">' +
+    '<h2 style="margin:0 0 8px">דרור · שחר · סנכרון יומי</h2>' +
+    '<p style="color:#555;margin:0 0 18px">פתיחה ראשונה במכשיר הזה: הדביקו את הקישור המלא שקיבלתם (או את מפתח הגישה). אחרי זה המכשיר יזכור אותו.</p>' +
+    '<input id="kp" dir="ltr" autocomplete="off" style="width:100%;box-sizing:border-box;padding:12px;font-size:16px;border:1px solid #ccc;border-radius:10px" placeholder="https://…/#…">' +
+    '<button id="kb" style="margin-top:12px;width:100%;padding:12px;font-size:16px;border:0;border-radius:10px;background:#4f46e5;color:#fff">כניסה</button>' +
+    '<p id="km" style="color:#b91c1c;min-height:1.2em"></p></div>';
+  function go() {
+    var v = document.getElementById('kp').value.trim(), m = v.match(/[0-9a-f]{32}/i), msg = document.getElementById('km');
+    if (!m) { msg.textContent = 'לא נמצא מפתח תקין. הדביקו את הקישור המלא.'; return; }
+    msg.style.color = '#555'; msg.textContent = 'בודק…';
+    KEY = m[0];
+    call('ping').then(function () {
+      try { localStorage.setItem('ds_sync_key', KEY); } catch (e) {}
+      location.hash = KEY; location.reload();
+    }).catch(function () { msg.style.color = '#b91c1c'; msg.textContent = 'המפתח לא התקבל. בדקו את הקישור.'; });
+  }
+  document.getElementById('kb').onclick = go;
+  document.getElementById('kp').onkeydown = function (e) { if (e.key === 'Enter') go(); };
+}
+/* ---------------- Boot ---------------- */
+if (['today', 'agenda', 'tasks', 'summaries'].indexOf(S.tab) < 0) S.tab = 'today';
+if (!KEY) { showKeyPrompt(); return; }
+renderAll();
+refresh();
+if (!S.me) openWho();
+setInterval(function () { if (!document.hidden) refresh(); }, REFRESH_MS);
+setInterval(tick, 500);
+})();
+</script>
+</body>
+</html>
