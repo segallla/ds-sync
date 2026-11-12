@@ -7,6 +7,7 @@
 <meta name="referrer" content="no-referrer">
 <base target="_top">
 <meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="data:,">
 <title>דרור · שחר · סנכרון יומי</title>
 <style>
 :root{
@@ -235,6 +236,46 @@ body.dragging-task{overflow:hidden}
   .today-board{background:linear-gradient(180deg,#2a2114 0%,var(--card) 42px);border-color:#8a6914}
   .today-board .card-head h2{color:#fbbf24}
 }
+
+/* email source (2026-11-12) */
+.src-links{display:flex;flex-wrap:wrap;gap:2px 14px;margin-top:3px}
+.src a.src-l.alt{color:var(--muted);font-weight:600}
+.src-sub{color:var(--muted);font-size:.76rem;margin-top:1px;word-break:break-word}
+.mail-h{display:grid;grid-template-columns:auto minmax(0,1fr);gap:1px 8px;margin:4px 0 6px;font-size:.76rem}
+.mail-h b{color:var(--muted);font-weight:600;white-space:nowrap}
+.mail-h span{word-break:break-word;min-width:0}
+.mail-b{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;line-height:1.45;max-height:340px;overflow:auto;
+  background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:.8rem;color:var(--text)}
+/* daily corner */
+.corner{border:1.5px solid #a78bfa;background:linear-gradient(180deg,#f4f0ff 0%,var(--card) 46px)}
+.corner .card-head h2{color:#6d28d9}
+.corner-nav{display:flex;align-items:center;gap:2px}
+.corner-nav .icon-btn{font-size:1.15rem;padding:4px 9px;min-width:36px;min-height:34px}
+.corner-nav .icon-btn[disabled]{opacity:.3;pointer-events:none}
+.corner-name{font-size:1.1rem;font-weight:800;margin:2px 0 1px;word-break:break-word}
+.corner-meta{font-size:.78rem;color:var(--muted);margin-bottom:4px;word-break:break-word}
+.corner-gist{margin:6px 0 8px;line-height:1.55;word-break:break-word}
+.corner-step{background:var(--pri-2);border-radius:10px;padding:8px 10px;margin:6px 0 8px;font-size:.92rem;line-height:1.5;word-break:break-word}
+.corner-step b{color:var(--pri)}
+.corner details{border-top:1px solid var(--line);padding:4px 0}
+.corner details>summary{cursor:pointer;font-weight:700;list-style:none;padding:6px 0;font-size:.93rem}
+.corner details>summary::-webkit-details-marker{display:none}
+.corner details>summary::before{content:'▸ ';color:var(--muted)}
+.corner details[open]>summary::before{content:'▾ '}
+.corner-sec{font-size:.9rem;line-height:1.55;word-break:break-word;overflow-wrap:anywhere;padding-bottom:4px}
+.corner-sec ul{margin:2px 0;padding-inline-start:18px}
+.corner-sec li{margin:3px 0}
+.corner-sec p{margin:3px 0}
+.corner-foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+@media (prefers-color-scheme:dark){
+  .corner{background:linear-gradient(180deg,#231d3b 0%,var(--card) 46px);border-color:#6d5bd0}
+  .corner .card-head h2{color:#c4b5fd}
+}
+/* new version hint */
+.update-bar{position:fixed;left:12px;right:12px;bottom:calc(var(--nav-h) + 14px + env(safe-area-inset-bottom));z-index:61;
+  max-width:520px;margin:0 auto;background:var(--text);color:var(--bg);border-radius:14px;padding:10px 12px;
+  display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);font-size:.9rem}
+.update-bar span{flex:1}
 </style>
 </head>
 <body>
@@ -269,6 +310,7 @@ body.dragging-task{overflow:hidden}
 
 <div class="modal" id="modal" hidden></div>
 <div class="toast" id="toast" hidden></div>
+<div class="update-bar" id="updBar" hidden><span>יש גרסה חדשה של האפליקציה</span><button type="button" class="btn primary sm" data-act="reloadApp">רענון</button></div>
 
 <script>
 (function () {
@@ -292,6 +334,7 @@ if (!window.CSS) window.CSS = {};
 if (!CSS.escape) CSS.escape = function (s) { return String(s).replace(/[^a-zA-Z0-9_-]/g, function (c) { return '\\' + c; }); };
 var TOTAL_SEC = 15 * 60;
 var REFRESH_MS = 60000;
+var BUILD = '2026-11-12.2';
 
 var PEOPLE = { Dror: 'דרור', Shachar: 'שחר', Both: 'שנינו', Bot: 'אוטומציה' };
 var OWNER_OPTS = { Dror: 'דרור', Shachar: 'שחר', Both: 'שנינו' };
@@ -301,7 +344,7 @@ var SOURCE = { manual: 'ידני', email: 'מייל', meeting: 'פגישה', tas
 var SOURCE_ICON = { email: '✉️', meeting: '📅', task: '✅', tldv: '🎙️', teams: '💬' };
 
 var S = {
-  data: { meetings: [], agenda: [], tasks: [], summaries: [] },
+  data: { meetings: [], agenda: [], tasks: [], summaries: [], corners: [] },
   loaded: false, error: '',
   me: localStorage.getItem('sync.me') || '',
   tab: localStorage.getItem('sync.tab') || 'today',
@@ -439,7 +482,9 @@ function refresh() {
   S.refreshing = true; setSync();
   call('getAll').then(function (res) {
     if (S.pending > 0 || S.rev !== rev) return; // local change in flight; next cycle syncs
-    S.data = { meetings: res.meetings || [], agenda: res.agenda || [], tasks: res.tasks || [], summaries: res.summaries || [] };
+    var ag = res.agenda || [];
+    S.data = { meetings: res.meetings || [], agenda: ag.filter(function (a) { return !isCorner(a); }), tasks: res.tasks || [],
+      summaries: res.summaries || [], corners: ag.filter(isCorner).sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); }) };
     S.loaded = true; S.error = ''; S.lastSync = Date.now();
     renderAll();
   }).catch(function (e) {
@@ -544,6 +589,100 @@ function statusMatch(t, f) {
   return t.status === f;
 }
 
+
+/* ---------------- הפינה היומית ----------------
+   One Agenda row per weekday: externalId "corner:YYYY-MM-DD", title "הפינה היומית: <name>",
+   status "discussed" (so older builds never put it in the open agenda), details start with ⟦פינה⟧:
+     ⟦פינה⟧
+     שם: … / סוג: … / תקופה: … / אנשי קשר: … / תקציר: …
+     ## מי הם והחיבור / ## למה עכשיו / ## רעיונות להחייאה / ## צעד ראשון / ## מקורות
+   refresh() moves these rows from S.data.agenda to S.data.corners. Written by corner.py. */
+var CORNER_PREFIX = 'הפינה היומית:';
+function isCorner(a) { return !!a && (/^corner:/.test(String(a.externalId || '')) || String(a.title || '').indexOf(CORNER_PREFIX) === 0); }
+function parseCorner(c) {
+  var o = { f: {}, secs: [] }, cur = null;
+  String(c.details || '').replace(/^⟦פינה⟧\s*/, '').split('\n').forEach(function (l) {
+    var h = l.match(/^##\s*(.+)$/);
+    if (h) { cur = { t: h[1].trim(), lines: [] }; o.secs.push(cur); return; }
+    if (cur) { if (l.trim()) cur.lines.push(l.trim()); return; }
+    var f = l.match(/^([^:]{1,20}):\s*(.*)$/);
+    if (f) o.f[f[1].trim()] = f[2].trim();
+  });
+  o.name = o.f['שם'] || String(c.title || '').replace(CORNER_PREFIX, '').trim();
+  return o;
+}
+function linkify(escaped) {
+  return escaped.replace(/https?:\/\/[^\s<"']+/g, function (u) {
+    var label = /tldv\.io/.test(u) ? '▶ tl;dv' : /outlook\./.test(u) ? '✉️ Outlook' : '↗ קישור';
+    return '<a href="' + u + '" target="_blank" rel="noopener">' + label + (/[?&]t=\d+/.test(u) ? ' (לרגע הזה)' : '') + '</a>';
+  });
+}
+function cornerSecHtml(lines) {
+  var html = '', list = [];
+  function flush() { if (list.length) { html += '<ul>' + list.join('') + '</ul>'; list = []; } }
+  lines.forEach(function (l) {
+    if (/^[-•*]\s+/.test(l)) list.push('<li>' + linkify(esc(l.replace(/^[-•*]\s+/, ''))) + '</li>');
+    else { flush(); html += '<p>' + linkify(esc(l)) + '</p>'; }
+  });
+  flush();
+  return html;
+}
+function cornerIndex() {
+  var list = S.data.corners || [];
+  if (!list.length) return -1;
+  if (S.cornerId) for (var i = 0; i < list.length; i++) if (list[i].id === S.cornerId) return i;
+  var t = todayStr(), idx = 0;
+  list.forEach(function (c, i) { if (c.date && c.date <= t) idx = i; });
+  return idx;
+}
+function cornerCard() {
+  var list = S.data.corners || [], i = cornerIndex();
+  if (i < 0) return '';
+  var c = list[i], p = parseCorner(c), t = todayStr();
+  var label = c.date === t ? 'היום' : c.date === addDays(t, 1) ? 'מחר' : shortDate(c.date);
+  var step = null, secs = [];
+  p.secs.forEach(function (x) { if (/^צעד ראשון/.test(x.t)) step = x; else secs.push(x); });
+  var meta = [p.f['סוג'], p.f['תקופה']].filter(Boolean).join(' · ');
+  var hasTask = S.data.tasks.some(function (x) { return x.externalId === 'corner-task:' + c.date; });
+  return '<section class="card corner" id="cornerCard"><div class="card-head"><h2>🧭 הפינה היומית</h2>' +
+      '<div class="corner-nav"><button type="button" class="icon-btn" data-act="cornerNav" data-dir="-1" aria-label="הפינה הקודמת"' + (i > 0 ? '' : ' disabled') + '>›</button>' +
+      '<span class="chip ' + (c.date === t ? '' : 'gray') + '">' + esc(label) + '</span>' +
+      '<button type="button" class="icon-btn" data-act="cornerNav" data-dir="1" aria-label="הפינה הבאה"' + (i < list.length - 1 ? '' : ' disabled') + '>‹</button></div></div>' +
+    '<div class="corner-name" dir="auto">' + esc(p.name) + '</div>' +
+    (meta ? '<div class="corner-meta">' + esc(meta) + '</div>' : '') +
+    (p.f['תקציר'] ? '<div class="corner-gist">' + esc(p.f['תקציר']) + '</div>' : '') +
+    (step ? '<div class="corner-step"><b>👣 צעד ראשון:</b> ' + linkify(esc(step.lines.join(' '))) + '</div>' : '') +
+    (p.f['אנשי קשר'] ? '<details><summary>אנשי קשר</summary><div class="corner-sec"><p>' + esc(p.f['אנשי קשר']) + '</p></div></details>' : '') +
+    secs.map(function (x) { return '<details><summary>' + esc(x.t) + '</summary><div class="corner-sec">' + cornerSecHtml(x.lines) + '</div></details>'; }).join('') +
+    '<div class="corner-foot">' +
+      (step ? (hasTask ? '<span class="chip ok">✓ הצעד הראשון כבר במשימות</span>'
+        : '<button type="button" class="btn sm" data-act="cornerTask" data-id="' + esc(c.id) + '">＋ הצעד הראשון כמשימה</button>') : '') +
+      '<span class="muted small">' + (i + 1) + ' מתוך ' + list.length + ' פינות</span>' +
+    '</div></section>';
+}
+function addCornerTask(c) {
+  var p = parseCorner(c), step = p.secs.filter(function (x) { return /^צעד ראשון/.test(x.t); })[0];
+  if (!step) return;
+  var title = (p.name + ': ' + step.lines.join(' ')).slice(0, 300);
+  var src = SRC_MARK + '\nנוסף ידנית ע״י ' + person(me()) + ' · ' + todayStr() + '\nהקשר: מהפינה היומית של ' + shortDate(c.date) + ' (' + p.name + ').';
+  var id = tmpId();
+  var rec = { title: title, owner: 'Both', assignee: '', dueDate: '', status: 'open', notes: joinNotes('', null, src),
+    meetingKey: '', sourceMeetingDate: '', externalId: 'corner-task:' + c.date };
+  mutate('tasks', function () {
+    S.data.tasks.push(Object.assign({ id: id, _pending: true, createdBy: me(), createdAt: nowStamp(), updatedAt: nowStamp() }, rec));
+  }, 'addTask', Object.assign({ createdBy: me() }, rec), { tempId: id });
+  toast('נוסף למשימות ✓');
+}
+
+/* New build published? Show a reload hint (the page is cached for a few minutes on phones). */
+function checkVersion() {
+  if (!/^https?:$/.test(location.protocol) || !window.fetch) return;
+  fetch(location.pathname + '?v=' + Date.now(), { cache: 'no-store', credentials: 'omit' })
+    .then(function (r) { return r.ok ? r.text() : ''; })
+    .then(function (t) { var m = t.match(/var BUILD = '([^']+)'/); if (m && m[1] !== BUILD) $('#updBar').hidden = false; })
+    .catch(function () {});
+}
+
 /* ---------------- Rendering ---------------- */
 function renderAll() {
   renderHeader();
@@ -580,6 +719,9 @@ function renderBadges() {
 function agendaRow(a, sec, o) {
   o = o || {};
   var link = safeUrl(a.link), discussed = a.status === 'discussed';
+  var sp = splitNotes(a.details), ps = sp.block ? parseSrc(sp.block) : null;
+  if (ps && !ps.kind) ps = null;
+  if (ps && ps.kind === 'email') { if (!ps.drorUrl && link) ps.drorUrl = link; link = ''; }
   var src = a.source && a.source !== 'manual'
     ? '<span class="chip">' + (SOURCE_ICON[a.source] || '•') + ' ' + esc(SOURCE[a.source] || a.source) + '</span>' : '';
   return '<li class="item' + (a._pending ? ' pending' : '') + (discussed ? ' discussed' : '') + '">' +
@@ -593,7 +735,8 @@ function agendaRow(a, sec, o) {
         (o.showDate && a.date && a.date < todayStr() && !discussed ? '<span class="chip warn">נדחה מ-' + esc(shortDate(a.date)) + '</span>' : '') +
         (a.createdBy ? '<span class="muted">· ' + esc(person(a.createdBy)) + '</span>' : '') +
       '</div>' +
-      (a.details ? '<div class="item-notes">' + esc(a.details) + '</div>' : '') +
+      (ps ? (sp.user ? '<div class="item-notes">' + esc(sp.user) + '</div>' : '') + srcBoxHtml(ps)
+          : (a.details ? '<div class="item-notes">' + esc(a.details) + '</div>' : '')) +
     '</div>' +
     (sec ? '<span class="tbox" title="זמן מוקצב">' + fmtMin(sec) + '</span>' : '') +
     (o.reorder ? '<div class="reorder"><button class="icon-btn sm" data-act="agendaMove" data-dir="-1" data-id="' + esc(a.id) +
@@ -648,17 +791,32 @@ var TODAY_MARK = '⟦היום⟧';
 function splitSrc(notes) { var p = splitNotes(notes); return { user: p.user, block: p.block }; }
 
 function parseSrc(block) {
-  var o = {};
-  String(block || '').split('\n').forEach(function (l) {
-    var m = l.match(/^(שיחה|מייל|נוסף ידנית ע״י|tl;dv|קישור|הקשר|ציטוט):?\s*(.*)$/);
+  var o = {}, s = String(block || '');
+  var mm = s.match(/⟦מייל⟧\s*\n([\s\S]*?)(?:⟦\/מייל⟧|$)/);
+  if (mm) {
+    s = s.replace(mm[0], '');
+    var body = mm[1], k = body.indexOf('\n---\n'), hdr = k < 0 ? body : body.slice(0, k);
+    o.mail = { h: [], body: k < 0 ? '' : body.slice(k + 5).replace(/^\s+|\s+$/g, '') };
+    hdr.split('\n').forEach(function (l) {
+      var x = l.match(/^(מאת|אל|עותק|תאריך|נושא):\s*(.*)$/);
+      if (x) o.mail.h.push([x[1], x[2]]);
+    });
+  }
+  s.split('\n').forEach(function (l) {
+    var m = l.match(/^(שיחה|מייל|נוסף ידנית ע״י|tl;dv|קישור דרור|קישור|חיפוש|משתתפים|סוג|הקשר|ציטוט):?\s*(.*)$/);
     if (!m) return;
     if (m[1] === 'שיחה') { o.kind = 'meeting'; o.head = m[2]; }
     else if (m[1] === 'מייל') { o.kind = 'email'; o.head = m[2]; }
     else if (m[1] === 'נוסף ידנית ע״י') { o.kind = 'manual'; o.head = m[2]; }
     else if (m[1] === 'tl;dv' || m[1] === 'קישור') o.url = m[2];
+    else if (m[1] === 'קישור דרור') o.drorUrl = m[2];
+    else if (m[1] === 'חיפוש') o.searchUrl = m[2];
+    else if (m[1] === 'משתתפים') o.who = m[2].toLowerCase().split(/[,\s]+/).filter(Boolean);
+    else if (m[1] === 'סוג') o.type = m[2];
     else if (m[1] === 'הקשר') o.ctx = m[2];
     else if (m[1] === 'ציטוט') o.quote = m[2];
   });
+  if (o.kind === 'email' && !o.drorUrl && /outlook\.(office|office365|live)\.com/i.test(o.url || '')) { o.drorUrl = o.url; o.url = ''; }
   return o;
 }
 
@@ -797,6 +955,7 @@ function clearTodayPlaceholder() {
 }
 function endDrag() {
   if (!drag) return;
+  if (drag.raf) cancelAnimationFrame(drag.raf);
   if (drag.ghost && drag.ghost.parentNode) drag.ghost.parentNode.removeChild(drag.ghost);
   document.querySelectorAll('.item.task.is-dragging').forEach(function (el) { el.classList.remove('is-dragging'); });
   clearTodayPlaceholder();
@@ -870,14 +1029,31 @@ function onTodayPointerMove(e) {
     drag.ghost.style.left = (e.clientX - 40) + 'px';
     drag.ghost.style.top = (e.clientY - 20) + 'px';
   }
+  drag.lastX = e.clientX; drag.lastY = e.clientY;
+  updateDropTarget(e.clientX, e.clientY);
+  if (!drag.raf) drag.raf = requestAnimationFrame(autoScrollStep);
+}
+function updateDropTarget(x, y) {
   var board = activeTodayBoard();
-  if (board) {
-    var r = board.getBoundingClientRect();
-    var pad = 28;
-    if (e.clientY >= r.top - pad && e.clientY <= r.bottom + pad && e.clientX >= r.left - pad && e.clientX <= r.right + pad) {
-      showPlaceholder(board, dropIndexAt(board, e.clientY, drag.id));
-    } else clearTodayPlaceholder();
-  }
+  if (!board || !drag) return;
+  var r = board.getBoundingClientRect();
+  var pad = 28;
+  if (y >= r.top - pad && y <= r.bottom + pad && x >= r.left - pad && x <= r.right + pad) {
+    showPlaceholder(board, dropIndexAt(board, y, drag.id));
+  } else clearTodayPlaceholder();
+}
+/* While dragging near the top/bottom edge, scroll the page so the target list can be reached. */
+function autoScrollStep() {
+  if (!drag || !drag.moved) { if (drag) drag.raf = 0; return; }
+  var y = drag.lastY, h = window.innerHeight, top = 90, bottom = h - 70 - 80, v = 0;
+  if (y < top) v = -Math.min(22, Math.ceil((top - y) / 4));
+  else if (y > bottom) v = Math.min(22, Math.ceil((y - bottom) / 4));
+  if (v) {
+    var before = window.pageYOffset;
+    window.scrollBy(0, v);
+    if (window.pageYOffset !== before) updateDropTarget(drag.lastX, drag.lastY);
+    drag.raf = requestAnimationFrame(autoScrollStep);
+  } else drag.raf = 0;
 }
 function onTodayPointerUp(e) {
   if (!drag || (drag.pointerId != null && e.pointerId !== drag.pointerId)) return;
@@ -909,24 +1085,52 @@ function taskSource(t) {
   }
   return p.kind ? p : null;
 }
-function srcHtml(t) {
-  var p = taskSource(t); if (!p) return '';
-  var head = String(p.head || ''), title = head, when = '';
+function srcHtml(t) { return srcBoxHtml(taskSource(t)); }
+function mailSubject(s) { return String(s || '').replace(/^\s*((re|fw|fwd|aw|tr)\s*:\s*)+/i, '').trim(); }
+function outlookSearchUrl(subj) { return 'https://outlook.office.com/mail/search?q=' + encodeURIComponent(mailSubject(subj)); }
+function srcBoxHtml(p) {
+  if (!p) return '';
+  var head = String(p.head || ''), title = head, when = '', tail = '';
   var m = head.match(/^(.*) · (\d{4}-\d{2}-\d{2})(?: (\d{1,2}:\d{2}))?(.*)$/);
-  if (m) { title = m[1]; when = shortDate(m[2]) + (m[3] ? ' · ' + m[3] : '') + (/ניו יורק/.test(m[4]) ? ' NY' : ''); }
+  if (m) { title = m[1]; tail = m[4] || ''; when = shortDate(m[2]) + (m[3] ? ' · ' + m[3] : '') + (/ניו יורק/.test(tail) ? ' NY' : ''); }
   if (p.kind === 'manual') title = 'נוסף ידנית ע״י ' + title;
-  var link = safeUrl(p.url), key = p.kind === 'email' ? '✉️ מקור:' : p.kind === 'manual' ? '✍️ מקור:' : '🎙️ מקור:';
   var q = p.quote ? String(p.quote).match(/^"?(.*?)"?\s*(\(([^()]*)\))?$/) : null;
   var more = (p.ctx || p.quote) ?
     '<details><summary>הקשר' + (p.quote ? ' וציטוט' : '') + '</summary>' +
       (p.ctx ? '<div class="src-ctx">' + esc(p.ctx) + '</div>' : '') +
       (q ? '<div class="src-q"><span dir="auto">“' + esc(q[1]) + '”</span>' + (q[3] ? ' <span class="who">(' + esc(q[3]) + ')</span>' : '') + '</div>' : '') +
     '</details>' : '';
+  if (p.kind === 'email') return mailSrcHtml(p, title, when, tail, more);
+  var link = safeUrl(p.url), key = p.kind === 'manual' ? '✍️ מקור:' : '🎙️ מקור:';
   return '<div class="src" data-stop="1"><div class="src-line"><span class="src-k">' + key + '</span>' +
     '<span class="src-t" dir="auto">' + esc(title) + '</span>' +
     (when ? '<span class="src-d">' + esc(when) + '</span>' : '') +
-    (link ? '<a class="src-l" href="' + esc(link) + '" target="_blank" rel="noopener">▶ tl;dv' + (/[?&]t=\d+/.test(link) ? ' (לרגע הזה)' : '') + '</a>' : '') +
+    (link ? '<a class="src-l" href="' + esc(link) + '" target="_blank" rel="noopener">▶ ' + (/tldv\.io/.test(link) ? 'tl;dv' : 'קישור') + (/[?&]t=\d+/.test(link) ? ' (לרגע הזה)' : '') + '</a>' : '') +
     '</div>' + more + '</div>';
+}
+/** Email source: opens in the viewer's own Outlook (search by subject), plus a readable copy stored in the app. */
+function mailSrcHtml(p, title, when, tail, more) {
+  var sender = (String(tail).match(/מאת\s+(.+)$/) || [])[1] || '';
+  var subj = mailSubject(title);
+  var mine = { Dror: 'dror', Shachar: 'shachar' }[S.me] || '';
+  var inThread = !mine || !p.who || !p.who.length || p.who.indexOf(mine) >= 0;
+  var search = safeUrl(p.searchUrl) || (subj ? outlookSearchUrl(subj) : '');
+  var dror = safeUrl(p.drorUrl);
+  var links = [];
+  if (S.me === 'Dror' && dror) links.push('<a class="src-l" href="' + esc(dror) + '" target="_blank" rel="noopener">↗ פתח את המייל</a>');
+  if (search && inThread) links.push('<a class="src-l' + (S.me === 'Dror' && dror ? ' alt' : '') + '" href="' + esc(search) + '" target="_blank" rel="noopener" data-copy="' + esc(subj) + '">🔎 פתח ב-Outlook שלי</a>');
+  if (S.me !== 'Dror' && dror) links.push('<a class="src-l alt" href="' + esc(dror) + '" target="_blank" rel="noopener" title="עובד רק בתיבה של דרור">↗ Outlook של דרור</a>');
+  if (!inThread && p.mail) links.push('<span class="muted">לא היית בשרשור, התוכן המלא כאן למטה</span>');
+  var mail = p.mail ? '<details class="mail"><summary>תוכן המייל</summary>' +
+      '<div class="mail-h">' + p.mail.h.map(function (x) { return '<b>' + esc(x[0]) + ':</b><span dir="auto">' + esc(x[1]) + '</span>'; }).join('') + '</div>' +
+      (p.mail.body ? '<div class="mail-b" dir="auto">' + esc(p.mail.body) + '</div>' : '') +
+    '</details>' : '';
+  return '<div class="src" data-stop="1"><div class="src-line"><span class="src-k">✉️ מקור:</span>' +
+    '<span class="src-t" dir="auto">' + esc(title) + '</span>' +
+    (when ? '<span class="src-d">' + esc(when) + '</span>' : '') + '</div>' +
+    (sender || p.type ? '<div class="src-sub">' + (sender ? 'מאת ' + '<span dir="auto">' + esc(sender) + '</span>' : '') + (sender && p.type ? ' · ' : '') + (p.type ? esc(p.type) : '') + '</div>' : '') +
+    (links.length ? '<div class="src-links">' + links.join('') + '</div>' : '') +
+    mail + more + '</div>';
 }
 
 function taskMeetingLabel(t) {
@@ -1022,7 +1226,7 @@ function renderToday() {
     (soon.length ? '<ul class="list">' + soon.slice(0, 8).map(function (x) { return taskRow(x); }).join('') + '</ul>' : '<div class="empty">אין משימות שמועד היעד שלהן קרוב 🎉</div>') +
     '</section>';
 
-  $('#tab-today').innerHTML = meetingCard(m) + todayBoardHtml() + timerCard(m, alloc) + agenda + tasks;
+  $('#tab-today').innerHTML = meetingCard(m) + todayBoardHtml() + timerCard(m, alloc) + agenda + cornerCard() + tasks;
 }
 
 function renderAgenda() {
@@ -1249,7 +1453,7 @@ function openTaskModal(t, preset) {
     '<label class="fld"><span>תאריך יעד</span><input type="date" name="dueDate" value="' + esc(x.dueDate || '') + '"></label></div>' +
     '<div class="row2"><label class="fld"><span>סטטוס</span><select name="status">' + opt(TASK_STATUS, x.status || 'open') + '</select></label>' +
     '<label class="fld"><span>אחראי/ת חיצוני/ת</span><input name="assignee" maxlength="200" value="' + esc(x.assignee || '') + '" placeholder="לא חובה"></label></div>' +
-    '<label class="fld"><span>מפגישה</span><select name="meetingKey"><option value="">—</option>' + meetingOpts(x.meetingKey) + '</select></label>' +
+    '<label class="fld"><span>מפגישה</span><select name="meetingKey"><option value="">ללא</option>' + meetingOpts(x.meetingKey) + '</select></label>' +
     '<label class="fld"><span>הערות</span><textarea name="notes" rows="3">' + esc(splitSrc(x.notes).user) + '</textarea></label>' +
     (t && taskSource(t) ? '<div class="fld"><span class="muted small">מקור</span>' + srcHtml(t) + '</div>' : '') +
     (t ? '<div class="muted small">נוצרה ע״י ' + esc(person(t.createdBy)) + (t.createdAt ? ' · ' + esc(String(t.createdAt).slice(0, 16)) : '') + '</div>' : '');
@@ -1281,17 +1485,20 @@ function addAgenda(d) {
 }
 
 function openAgendaModal(a) {
+  var asp = splitNotes(a.details);
   var inner =
     '<label class="fld"><span>נושא</span><input name="title" required maxlength="500" value="' + esc(a.title) + '"></label>' +
     '<div class="row2"><label class="fld"><span>תאריך פגישה</span><input type="date" name="date" value="' + esc(a.date || '') + '"></label>' +
     '<label class="fld"><span>דקות</span><input type="number" name="minutes" min="1" max="15" value="' + esc(a.minutes || '') + '" placeholder="אוטומטי"></label></div>' +
-    '<label class="fld"><span>פרטים</span><textarea name="details" rows="3">' + esc(a.details || '') + '</textarea></label>' +
+    '<label class="fld"><span>פרטים</span><textarea name="details" rows="3">' + esc(asp.block ? asp.user : (a.details || '')) + '</textarea></label>' +
+    (asp.block && parseSrc(asp.block).kind ? '<div class="fld"><span class="muted small">מקור</span>' + srcBoxHtml((function () { var p = parseSrc(asp.block); if (p.kind === 'email' && !p.drorUrl) p.drorUrl = a.link; return p; })()) + '</div>' : '') +
     '<label class="fld"><span>קישור</span><input type="url" name="link" value="' + esc(a.link || '') + '" placeholder="https://"></label>' +
     '<label class="fld"><span>סטטוס</span><select name="status">' + opt({ open: 'פתוח', discussed: 'נדון' }, a.status || 'open') + '</select></label>' +
     '<div class="muted small">' + (a.source && a.source !== 'manual' ? 'מקור: ' + esc(SOURCE[a.source] || a.source) + (a.from ? ' · ' + esc(a.from) : '') + ' · ' : '') +
       'נוסף ע״י ' + esc(person(a.createdBy)) + '</div>';
   openModal('עריכת נושא', inner, function (d) {
-    var patch = { title: d.title, date: d.date, minutes: d.minutes, details: d.details, link: d.link, status: d.status };
+    var details = asp.block ? joinNotes(String(d.details || '').replace(/\s+$/, ''), asp.today, asp.block) : d.details;
+    var patch = { title: d.title, date: d.date, minutes: d.minutes, details: details, link: d.link, status: d.status };
     mutate('agenda', function () { var r = byId('agenda', a.id); if (r) Object.assign(r, patch, { updatedAt: nowStamp() }); },
       'updateAgendaItem', Object.assign({ id: a.id }, patch));
   }, { extra: '<button type="button" class="btn danger" data-act="deleteAgenda" data-id="' + esc(a.id) + '">מחיקה</button>' });
@@ -1420,6 +1627,17 @@ var ACT = {
   summaryEdit: function (d) { var s = byId('summaries', d.id); if (s && !guardTemp(s.id)) openSummaryModal(s); },
   deleteSummary: function (d) { removeRec('summaries', 'deleteSummary', d.id, 'הסיכום'); },
 
+  cornerNav: function (d) {
+    var list = S.data.corners || [], i = cornerIndex() + Number(d.dir || 0);
+    if (i < 0 || i >= list.length) return;
+    S.cornerId = list[i].id; renderToday();
+  },
+  cornerTask: function (d) {
+    var c = (S.data.corners || []).filter(function (x) { return x.id === d.id; })[0];
+    if (c) addCornerTask(c);
+  },
+  reloadApp: function () { location.replace(location.pathname + '?v=' + Date.now()); },
+
   timerStart: function () {
     unlockAudio();
     var m = nextMeeting(), t = currentTimer(m);
@@ -1454,6 +1672,13 @@ var ACT = {
 
 /* ---------------- Events ---------------- */
 document.addEventListener('click', function (e) {
+  var cp = e.target.closest('a[data-copy]');
+  if (cp) {
+    var subj = cp.getAttribute('data-copy');
+    try { if (navigator.clipboard && subj) navigator.clipboard.writeText(subj).catch(function () {}); } catch (err) {}
+    toast('נושא המייל הועתק. אם Outlook לא מסנן לבד, הדביקו אותו בחיפוש');
+    return;
+  }
   if (e.target.closest('a[href]')) return; // let links open normally
   if (e.target.closest('[data-stop]')) return; // source box: native <details> toggle
   var el = e.target.closest('[data-act]');
@@ -1496,6 +1721,7 @@ $('#fab').addEventListener('click', function () {
   else if (S.tab === 'agenda') { var i = $('#tab-agenda input[name=title]'); if (i) { i.scrollIntoView({ block: 'center' }); i.focus(); } }
 });
 document.addEventListener('visibilitychange', function () {
+  if (!document.hidden) checkVersion();
   if (!document.hidden && Date.now() - S.lastSync > 20000) refresh();
 });
 document.addEventListener('pointerdown', onTodayPointerDown);
@@ -1533,6 +1759,8 @@ refresh();
 if (!S.me) openWho();
 setInterval(function () { if (!document.hidden) refresh(); }, REFRESH_MS);
 setInterval(tick, 500);
+setTimeout(checkVersion, 20000);
+setInterval(function () { if (!document.hidden) checkVersion(); }, 10 * 60000);
 })();
 </script>
 </body>
