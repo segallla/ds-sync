@@ -92,6 +92,21 @@ h4{margin:14px 0 6px;font-size:.85rem;color:var(--muted);font-weight:600}
 .item-notes{font-size:.85rem;color:var(--muted);margin-top:4px;white-space:pre-wrap;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .item.overdue{background:linear-gradient(270deg,transparent,var(--bad-2));margin:0 -16px;padding:10px 16px;border-inline-start:3px solid var(--bad)}
+.meta>*{min-width:0;max-width:100%}.meta .chip{overflow:hidden;text-overflow:ellipsis}.meta>span.muted{overflow-wrap:anywhere}
+.src{margin-top:6px;font-size:.8rem;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px 9px;cursor:default}
+.src-line{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:baseline;line-height:1.35}
+.src-k{font-weight:700;color:var(--pri)}
+.src-t{font-weight:600;word-break:break-word}
+.src-d{color:var(--muted);white-space:nowrap}
+.src a.src-l{color:var(--pri);font-weight:700;text-decoration:none;white-space:nowrap;padding:2px 0}
+.src details{margin-top:3px}
+.src summary{cursor:pointer;color:var(--muted);list-style:none;display:inline-block;padding:3px 0;font-weight:600}
+.src summary::-webkit-details-marker{display:none}
+.src summary::before{content:'▸ ';display:inline-block}
+.src details[open] summary::before{content:'▾ '}
+.src-ctx{margin-top:2px;color:var(--text);line-height:1.45;word-break:break-word}
+.src-q{margin-top:5px;padding-inline-start:8px;border-inline-start:3px solid var(--pri-2);color:var(--muted);font-style:italic;word-break:break-word}
+.src-q .who{font-style:normal;font-size:.75rem}
 .check{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid var(--line);background:var(--card);
   color:transparent;cursor:pointer;font-weight:900;font-size:.85rem;display:grid;place-items:center;margin-top:1px;transition:all .15s;padding:0}
 .check:hover{border-color:var(--ok);color:var(--ok)}
@@ -570,10 +585,70 @@ function taskRow(t) {
         (t.dueDate ? '<span class="chip ' + (od ? 'bad' : soon ? 'warn' : 'gray') + '">' + (od ? '⚠ באיחור · ' : '📅 ') + esc(dueLabel(t.dueDate)) + '</span>' : '') +
         (t.status === 'in progress' ? '<span class="chip">⏳ בתהליך</span>' : '') +
         (t.assignee ? '<span class="chip gray">👤 ' + esc(t.assignee) + '</span>' : '') +
-        (t._noMeeting ? '' : taskMeetingLabel(t)) +
+        (t._noMeeting || taskSource(t) ? '' : taskMeetingLabel(t)) +
       '</div>' +
-      (t.notes ? '<div class="item-notes">' + esc(t.notes) + '</div>' : '') +
+      (splitSrc(t.notes).user ? '<div class="item-notes">' + esc(splitSrc(t.notes).user) + '</div>' : '') +
+      srcHtml(t) +
     '</div></li>';
+}
+
+
+/* ---------------- Task source ("מקור") ----------------
+   Stored at the end of task.notes after the marker line "⟦מקור⟧", so no backend change is needed:
+     ⟦מקור⟧
+     שיחה: <title> · <YYYY-MM-DD> <HH:MM> (שעון ניו יורק)   | מייל: <subject> · <date> · מאת <sender> | נוסף ידנית ע״י <X> · <date>
+     tl;dv: <url>        (or  קישור: <url>)
+     הקשר: <1-2 Hebrew sentences>
+     ציטוט: "<quote>" (<speaker>, <mm:ss>)
+   Users only see/edit the text above the marker; the block is kept on save. */
+var SRC_MARK = '⟦מקור⟧';
+function splitSrc(notes) {
+  notes = String(notes || ''); var i = notes.indexOf(SRC_MARK);
+  return i < 0 ? { user: notes, block: '' } : { user: notes.slice(0, i).replace(/\s+$/, ''), block: notes.slice(i) };
+}
+function parseSrc(block) {
+  var o = {};
+  String(block || '').split('\n').forEach(function (l) {
+    var m = l.match(/^(שיחה|מייל|נוסף ידנית ע״י|tl;dv|קישור|הקשר|ציטוט):?\s*(.*)$/);
+    if (!m) return;
+    if (m[1] === 'שיחה') { o.kind = 'meeting'; o.head = m[2]; }
+    else if (m[1] === 'מייל') { o.kind = 'email'; o.head = m[2]; }
+    else if (m[1] === 'נוסף ידנית ע״י') { o.kind = 'manual'; o.head = m[2]; }
+    else if (m[1] === 'tl;dv' || m[1] === 'קישור') o.url = m[2];
+    else if (m[1] === 'הקשר') o.ctx = m[2];
+    else if (m[1] === 'ציטוט') o.quote = m[2];
+  });
+  return o;
+}
+function taskSource(t) {
+  var p = parseSrc(splitSrc(t.notes).block), s = summaryByKey(t.meetingKey);
+  if (!p.kind && s) {
+    p = { kind: 'meeting', head: (s.title || 'פגישה') + ' · ' + (s.date || '') + (s.time ? ' ' + s.time : '') + ' (שעון ניו יורק)', url: s.tldvUrl };
+  } else if (!p.kind && (t.createdBy === 'Dror' || t.createdBy === 'Shachar')) {
+    p = { kind: 'manual', head: person(t.createdBy) + ' · ' + String(t.createdAt || '').slice(0, 10) };
+  } else if (!p.kind && t.sourceMeetingDate) {
+    p = { kind: 'meeting', head: 'פגישה · ' + t.sourceMeetingDate };
+  }
+  return p.kind ? p : null;
+}
+function srcHtml(t) {
+  var p = taskSource(t); if (!p) return '';
+  var head = String(p.head || ''), title = head, when = '';
+  var m = head.match(/^(.*) · (\d{4}-\d{2}-\d{2})(?: (\d{1,2}:\d{2}))?(.*)$/);
+  if (m) { title = m[1]; when = shortDate(m[2]) + (m[3] ? ' · ' + m[3] : '') + (/ניו יורק/.test(m[4]) ? ' NY' : ''); }
+  if (p.kind === 'manual') title = 'נוסף ידנית ע״י ' + title;
+  var link = safeUrl(p.url), key = p.kind === 'email' ? '✉️ מקור:' : p.kind === 'manual' ? '✍️ מקור:' : '🎙️ מקור:';
+  var q = p.quote ? String(p.quote).match(/^"?(.*?)"?\s*(\(([^()]*)\))?$/) : null;
+  var more = (p.ctx || p.quote) ?
+    '<details><summary>הקשר' + (p.quote ? ' וציטוט' : '') + '</summary>' +
+      (p.ctx ? '<div class="src-ctx">' + esc(p.ctx) + '</div>' : '') +
+      (q ? '<div class="src-q"><span dir="auto">“' + esc(q[1]) + '”</span>' + (q[3] ? ' <span class="who">(' + esc(q[3]) + ')</span>' : '') + '</div>' : '') +
+    '</details>' : '';
+  return '<div class="src" data-stop="1"><div class="src-line"><span class="src-k">' + key + '</span>' +
+    '<span class="src-t" dir="auto">' + esc(title) + '</span>' +
+    (when ? '<span class="src-d">' + esc(when) + '</span>' : '') +
+    (link ? '<a class="src-l" href="' + esc(link) + '" target="_blank" rel="noopener">▶ tl;dv' + (/[?&]t=\d+/.test(link) ? ' (לרגע הזה)' : '') + '</a>' : '') +
+    '</div>' + more + '</div>';
 }
 
 function taskMeetingLabel(t) {
@@ -894,11 +969,14 @@ function openTaskModal(t, preset) {
     '<div class="row2"><label class="fld"><span>סטטוס</span><select name="status">' + opt(TASK_STATUS, x.status || 'open') + '</select></label>' +
     '<label class="fld"><span>אחראי/ת חיצוני/ת</span><input name="assignee" maxlength="200" value="' + esc(x.assignee || '') + '" placeholder="לא חובה"></label></div>' +
     '<label class="fld"><span>מפגישה</span><select name="meetingKey"><option value="">—</option>' + meetingOpts(x.meetingKey) + '</select></label>' +
-    '<label class="fld"><span>הערות</span><textarea name="notes" rows="3">' + esc(x.notes || '') + '</textarea></label>' +
+    '<label class="fld"><span>הערות</span><textarea name="notes" rows="3">' + esc(splitSrc(x.notes).user) + '</textarea></label>' +
+    (t && taskSource(t) ? '<div class="fld"><span class="muted small">מקור</span>' + srcHtml(t) + '</div>' : '') +
     (t ? '<div class="muted small">נוצרה ע״י ' + esc(person(t.createdBy)) + (t.createdAt ? ' · ' + esc(String(t.createdAt).slice(0, 16)) : '') + '</div>' : '');
   openModal(t ? 'עריכת משימה' : 'משימה חדשה', inner, function (d) {
-    var ms = summaryByKey(d.meetingKey);
-    var patch = { title: d.title, owner: d.owner, assignee: d.assignee, dueDate: d.dueDate, status: d.status, notes: d.notes,
+    var ms = summaryByKey(d.meetingKey), blk = t ? splitSrc(t.notes).block : '';
+    var userNotes = String(d.notes || '').replace(/\s+$/, '');
+    var patch = { title: d.title, owner: d.owner, assignee: d.assignee, dueDate: d.dueDate, status: d.status,
+      notes: blk ? (userNotes ? userNotes + '\n\n' + blk : blk) : userNotes,
       meetingKey: d.meetingKey, sourceMeetingDate: ms ? ms.date : (t && t.meetingKey === d.meetingKey ? t.sourceMeetingDate || '' : '') };
     if (t) {
       mutate('tasks', function () { var r = byId('tasks', t.id); if (r) Object.assign(r, patch, { updatedAt: nowStamp() }); },
@@ -1093,6 +1171,7 @@ var ACT = {
 /* ---------------- Events ---------------- */
 document.addEventListener('click', function (e) {
   if (e.target.closest('a[href]')) return; // let links open normally
+  if (e.target.closest('[data-stop]')) return; // source box: native <details> toggle
   var el = e.target.closest('[data-act]');
   if (!el) return;
   var fn = ACT[el.dataset.act];
