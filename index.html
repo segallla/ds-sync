@@ -21,7 +21,7 @@
         --ok-2:#12301f;--warn:#fb923c;--warn-2:#38260f;--bad:#f87171;--bad-2:#3a1717;--shadow:none}
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg);color:var(--text);
+html,body{margin:0;background:var(--bg);color:var(--text);overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans Hebrew",Rubik,Roboto,Arial,sans-serif;
   font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
 body.noscroll{overflow:hidden}
@@ -208,6 +208,33 @@ nav.bottom{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--ca
 .sum-title{font-weight:800;word-break:break-word}
 .month-title{font-size:.82rem;font-weight:800;color:var(--muted);margin:16px 2px 8px}
 .more-btn{width:100%;margin-bottom:14px}
+
+.today-board{border:1.5px solid #e8b84a;background:linear-gradient(180deg,#fff8e6 0%,var(--card) 42px)}
+.today-board .card-head h2{color:#9a6700}
+.today-board.over{box-shadow:0 0 0 3px rgba(232,184,74,.45)}
+.today-empty{border:1.5px dashed var(--line);border-radius:12px;padding:16px 10px;text-align:center;color:var(--muted);font-size:.9rem;margin:4px 0 8px}
+.today-add{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:stretch}
+.today-add input[name=title]{flex:1 1 150px;min-width:0}
+.today-add select{flex:0 1 118px;width:auto;min-width:0;max-width:100%}
+.today-add .btn{flex:0 0 auto}
+.task-tools{display:flex;flex-direction:column;align-items:center;gap:2px;flex:none;margin-top:1px}
+.drag-handle{flex:none;cursor:grab;touch-action:none;color:var(--muted);padding:6px 4px;font-size:1.05rem;line-height:1;
+  user-select:none;-webkit-user-select:none;border:0;background:transparent}
+.drag-handle:active{cursor:grabbing}
+.today-pin{border:0;background:var(--pri-2);color:var(--pri);border-radius:999px;padding:2px 8px;font-size:.75rem;font-weight:700;
+  cursor:pointer;white-space:nowrap;min-height:28px}
+.today-x{color:var(--muted);font-size:1rem;line-height:1;min-width:28px;min-height:28px}
+body.dragging-task,body.dragging-task *{cursor:grabbing!important;user-select:none;-webkit-user-select:none}
+body.dragging-task{overflow:hidden}
+.item.task.is-dragging{opacity:.35}
+.drag-ghost{position:fixed;z-index:80;pointer-events:none;margin:0;padding:10px 12px;width:min(340px,calc(100vw - 32px));
+  box-shadow:0 10px 30px rgba(20,20,50,.22);opacity:.96;transform:rotate(2deg);background:var(--card);
+  border:1px solid var(--line);border-radius:12px;direction:rtl;font-weight:600;word-break:break-word}
+.today-ph{height:6px;margin:6px 0;border-radius:99px;background:var(--pri);list-style:none;padding:0;border:0}
+@media (prefers-color-scheme:dark){
+  .today-board{background:linear-gradient(180deg,#2a2114 0%,var(--card) 42px);border-color:#8a6914}
+  .today-board .card-head h2{color:#fbbf24}
+}
 </style>
 </head>
 <body>
@@ -261,6 +288,8 @@ var KEY = (function () {
 })();
 var API_URL = "https://script.google.com/macros/s/AKfycbypWC3zxI6NALV-xX_SbqJMmt3Lcr5nDQzuo-UlQIdAKKyOhYPFM-T-E5Vh9b7w2UVfCA/exec";
 var TZ = 'America/New_York';
+if (!window.CSS) window.CSS = {};
+if (!CSS.escape) CSS.escape = function (s) { return String(s).replace(/[^a-zA-Z0-9_-]/g, function (c) { return '\\' + c; }); };
 var TOTAL_SEC = 15 * 60;
 var REFRESH_MS = 60000;
 
@@ -403,7 +432,7 @@ function call(action, payload) {
 }
 
 function refresh() {
-  if (S.pending > 0 || S.refreshing) return;
+  if (S.pending > 0 || S.refreshing || S.dragging) return;
   var a = document.activeElement;
   if (S.loaded && a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && $('#app').contains(a) && a.value) return; // don't wipe typing
   var rev = S.rev;
@@ -573,10 +602,18 @@ function agendaRow(a, sec, o) {
   '</li>';
 }
 
-function taskRow(t) {
+function taskRow(t, opts) {
+  opts = opts || {};
   var od = isOverdue(t), done = t.status === 'done';
   var soon = !done && t.dueDate && !od && t.dueDate <= addDays(todayStr(), 2);
-  return '<li class="item task' + (od ? ' overdue' : '') + (done ? ' done' : '') + (t._pending ? ' pending' : '') + '">' +
+  var inToday = !!opts.inToday, onToday = isOnTodayList(t);
+  var pin = '';
+  if (!done) {
+    if (inToday) pin = '<button type="button" class="icon-btn today-x" data-act="todayRemove" data-id="' + esc(t.id) + '" aria-label="הסר מהיום">✕</button>';
+    else if (onToday) pin = '<span class="chip gray" title="כבר בהיום">☀ היום</span>';
+    else pin = '<button type="button" class="today-pin" data-act="todayAdd" data-id="' + esc(t.id) + '">☀ להיום</button>';
+  }
+  return '<li class="item task' + (od ? ' overdue' : '') + (done ? ' done' : '') + (t._pending ? ' pending' : '') + '" data-id="' + esc(t.id) + '">' +
     '<button class="check' + (done ? ' on' : '') + '" data-act="toggleTask" data-id="' + esc(t.id) + '" aria-label="' +
       (done ? 'פתח מחדש' : 'סמן כהושלם') + '">✓</button>' +
     '<div class="item-body" data-act="editTask" data-id="' + esc(t.id) + '">' +
@@ -586,9 +623,14 @@ function taskRow(t) {
         (t.status === 'in progress' ? '<span class="chip">⏳ בתהליך</span>' : '') +
         (t.assignee ? '<span class="chip gray">👤 ' + esc(t.assignee) + '</span>' : '') +
         (t._noMeeting || taskSource(t) ? '' : taskMeetingLabel(t)) +
+        (inToday ? '' : pin) +
       '</div>' +
-      (splitSrc(t.notes).user ? '<div class="item-notes">' + esc(splitSrc(t.notes).user) + '</div>' : '') +
+      (splitNotes(t.notes).user ? '<div class="item-notes">' + esc(splitNotes(t.notes).user) + '</div>' : '') +
       srcHtml(t) +
+    '</div>' +
+    '<div class="task-tools">' +
+      (inToday ? pin : '') +
+      (done ? '' : '<button type="button" class="drag-handle" data-drag="1" data-id="' + esc(t.id) + '" aria-label="גרור להיום" title="גרור אל משימות להיום">⠿</button>') +
     '</div></li>';
 }
 
@@ -602,10 +644,9 @@ function taskRow(t) {
      ציטוט: "<quote>" (<speaker>, <mm:ss>)
    Users only see/edit the text above the marker; the block is kept on save. */
 var SRC_MARK = '⟦מקור⟧';
-function splitSrc(notes) {
-  notes = String(notes || ''); var i = notes.indexOf(SRC_MARK);
-  return i < 0 ? { user: notes, block: '' } : { user: notes.slice(0, i).replace(/\s+$/, ''), block: notes.slice(i) };
-}
+var TODAY_MARK = '⟦היום⟧';
+function splitSrc(notes) { var p = splitNotes(notes); return { user: p.user, block: p.block }; }
+
 function parseSrc(block) {
   var o = {};
   String(block || '').split('\n').forEach(function (l) {
@@ -620,6 +661,243 @@ function parseSrc(block) {
   });
   return o;
 }
+
+/* ---------------- Today list ("משימות להיום") ----------------
+   Stored as a line in task.notes (no backend change; updateTask drops unknown fields):
+     ⟦היום⟧ YYYY-MM-DD [order]     pinned to that New York date (order is optional)
+     ⟦היום⟧ לא YYYY-MM-DD         hidden from auto-include (overdue / due today) for that date
+   The line sits above the ⟦מקור⟧ block, is hidden from the notes field, and is kept on save.
+   A pin for a past date drops off automatically the next day. */
+function parseTodayLine(line) {
+  var s = String(line || '').trim();
+  if (s.indexOf(TODAY_MARK) !== 0) return null;
+  var rest = s.slice(TODAY_MARK.length).trim();
+  var hide = rest.match(/^לא\s+(\d{4}-\d{2}-\d{2})\s*$/);
+  if (hide) return { dismissed: hide[1] };
+  var pin = rest.match(/^(\d{4}-\d{2}-\d{2})(?:\s+(\d+))?\s*$/);
+  if (pin) return { date: pin[1], order: pin[2] ? Number(pin[2]) : null };
+  return null;
+}
+function splitNotes(notes) {
+  notes = String(notes || '');
+  var i = notes.indexOf(SRC_MARK);
+  var head = i < 0 ? notes : notes.slice(0, i);
+  var block = i < 0 ? '' : notes.slice(i).replace(/^\s+/, '');
+  var today = null, user = [];
+  head.split('\n').forEach(function (l) {
+    if (/^\s*⟦היום⟧/.test(l)) { var p = parseTodayLine(l); if (p) today = p; }
+    else user.push(l);
+  });
+  return { user: user.join('\n').replace(/^\s+|\s+$/g, ''), today: today, block: block };
+}
+function joinNotes(user, today, block) {
+  var parts = [];
+  if (today) {
+    if (today.dismissed) parts.push(TODAY_MARK + ' לא ' + today.dismissed);
+    else if (today.date) parts.push(TODAY_MARK + ' ' + today.date + (today.order > 0 ? ' ' + today.order : ''));
+  }
+  if (user) parts.push(user);
+  if (block) parts.push(String(block).replace(/^\s+/, ''));
+  return parts.join('\n\n');
+}
+function todayMeta(t) { return t ? splitNotes(t.notes).today : null; }
+function isOnTodayList(t) {
+  if (!t || t.status === 'done') return false;
+  var d = todayStr(), m = todayMeta(t);
+  if (m && m.dismissed === d) return false;
+  if (m && m.date === d) return true;
+  return !!(t.dueDate && t.dueDate <= d);
+}
+function todaySort(a, b) {
+  var d = todayStr(), ma = todayMeta(a) || {}, mb = todayMeta(b) || {};
+  var pa = ma.date === d ? (ma.order || 9999) : 10000;
+  var pb = mb.date === d ? (mb.order || 9999) : 10000;
+  if (pa !== pb) return pa - pb;
+  return taskSort(a, b);
+}
+function todayTasks() { return S.data.tasks.filter(isOnTodayList).sort(todaySort); }
+function todayOwnerDefault() { return S.me || 'Both'; }
+function todayBoardHtml() {
+  var list = todayTasks();
+  var owner = todayOwnerDefault();
+  return '<section class="card today-board"><div class="card-head"><h2>☀ משימות להיום</h2>' +
+    '<span class="chip' + (list.length ? '' : ' gray') + '">' + list.length + '</span></div>' +
+    (list.length
+      ? '<ul class="list today-list">' + list.map(function (t) { return taskRow(t, { inToday: true }); }).join('') + '</ul>'
+      : '<div class="today-empty">גררו לכאן משימה, או הוסיפו אחת חדשה</div>') +
+    '<form class="today-add" data-form="quickToday" autocomplete="off">' +
+      '<input name="title" placeholder="משימה חדשה להיום…" required maxlength="500">' +
+      '<select name="owner" aria-label="אחראי/ת">' + opt(OWNER_OPTS, owner) + '</select>' +
+      '<button class="btn primary sm" type="submit">הוסף</button>' +
+    '</form></section>';
+}
+function notesWithToday(t, meta) {
+  var p = splitNotes(t && t.notes);
+  return joinNotes(p.user, meta, p.block);
+}
+function applyTodayMeta(t, meta) {
+  if (!t || guardTemp(t.id)) return;
+  var notes = notesWithToday(t, meta);
+  mutate('tasks', function () { var r = byId('tasks', t.id); if (r) { r.notes = notes; r.updatedAt = nowStamp(); } },
+    'updateTask', { id: t.id, notes: notes });
+}
+function addToToday(t, order) {
+  if (!t || t.status === 'done') return;
+  if (isOnTodayList(t) && todayMeta(t) && todayMeta(t).date === todayStr() && order == null) { toast('כבר בהיום'); return; }
+  applyTodayMeta(t, { date: todayStr(), order: order || null });
+  toast('נוסף להיום ✓');
+}
+function removeFromToday(t) {
+  if (!t) return;
+  var d = todayStr();
+  var meta = (t.dueDate && t.dueDate <= d) ? { dismissed: d } : null;
+  applyTodayMeta(t, meta);
+  toast('הוסר מהיום');
+}
+function reorderToday(ids) {
+  if (!ids || !ids.length) return;
+  if (ids.some(function (id) { return isTmp(id); })) { toast('רגע, עדיין שומר…'); return; }
+  var d = todayStr();
+  var ops = [], snap = JSON.stringify(S.data.tasks);
+  S.rev++;
+  ids.forEach(function (id, n) {
+    var t = byId('tasks', id); if (!t) return;
+    var notes = notesWithToday(t, { date: d, order: n + 1 });
+    t.notes = notes; t.updatedAt = nowStamp();
+    ops.push({ action: 'updateTask', data: { id: id, notes: notes } });
+  });
+  if (!ops.length) return;
+  S.pending++; renderAll(); setSync();
+  call('bulk', { ops: ops }).then(function () { return true; }).catch(function (e) {
+    S.data.tasks = JSON.parse(snap);
+    toast('לא הצלחנו לשמור את הסדר: ' + errMsg(e), true);
+  }).then(function () { S.pending--; S.rev++; renderAll(); setSync(); });
+}
+function addQuickToday(d) {
+  if (!d.title) return;
+  var id = tmpId(), owner = d.owner || todayOwnerDefault();
+  var src = SRC_MARK + '\nנוסף ידנית ע״י ' + person(me()) + ' · ' + todayStr();
+  var notes = joinNotes('', { date: todayStr() }, src);
+  var rec = { title: d.title, owner: owner, assignee: '', dueDate: '', status: 'open', notes: notes, meetingKey: '', sourceMeetingDate: '' };
+  mutate('tasks', function () {
+    S.data.tasks.push(Object.assign({ id: id, _pending: true, createdBy: me(), createdAt: nowStamp(), updatedAt: nowStamp() }, rec));
+  }, 'addTask', Object.assign({ createdBy: me() }, rec), { tempId: id });
+  toast('נוסף להיום ✓');
+}
+
+function activeTodayBoard() {
+  return document.querySelector('.tab.on .today-board');
+}
+
+/* Pointer drag (mouse + touch). HTML5 DnD is skipped because it does not work on iOS. */
+var drag = null;
+function clearTodayPlaceholder() {
+  document.querySelectorAll('.today-ph').forEach(function (el) { el.remove(); });
+  document.querySelectorAll('.today-board').forEach(function (el) { el.classList.remove('over'); });
+}
+function endDrag() {
+  if (!drag) return;
+  if (drag.ghost && drag.ghost.parentNode) drag.ghost.parentNode.removeChild(drag.ghost);
+  document.querySelectorAll('.item.task.is-dragging').forEach(function (el) { el.classList.remove('is-dragging'); });
+  clearTodayPlaceholder();
+  document.body.classList.remove('dragging-task');
+  S.dragging = false;
+  if (drag.moved) {
+    // swallow the click that follows a drag
+    var swallow = function (e) { e.stopPropagation(); e.preventDefault(); document.removeEventListener('click', swallow, true); };
+    document.addEventListener('click', swallow, true);
+    setTimeout(function () { document.removeEventListener('click', swallow, true); }, 400);
+  }
+  drag = null;
+}
+function dropIndexAt(board, clientY, skipId) {
+  var list = board.querySelector('.today-list');
+  if (!list) return 0;
+  var items = [].slice.call(list.querySelectorAll('.item.task')).filter(function (el) { return el.dataset.id !== skipId; });
+  for (var i = 0; i < items.length; i++) {
+    var r = items[i].getBoundingClientRect();
+    if (clientY < r.top + r.height / 2) return i;
+  }
+  return items.length;
+}
+function showPlaceholder(board, idx) {
+  clearTodayPlaceholder();
+  if (!board) return;
+  board.classList.add('over');
+  var ph = document.createElement('li');
+  ph.className = 'today-ph';
+  var list = board.querySelector('.today-list');
+  if (!list) {
+    var empty = board.querySelector('.today-empty');
+    if (empty) empty.insertAdjacentElement('beforebegin', ph);
+    else board.insertBefore(ph, board.querySelector('.today-add'));
+    return;
+  }
+  var items = [].slice.call(list.querySelectorAll('.item.task')).filter(function (el) { return !el.classList.contains('is-dragging'); });
+  if (idx >= items.length) list.appendChild(ph);
+  else list.insertBefore(ph, items[idx]);
+}
+function onTodayPointerDown(e) {
+  if (e.button != null && e.button !== 0) return;
+  var handle = e.target.closest && e.target.closest('[data-drag]');
+  if (!handle || handle.closest('.modal')) return;
+  var id = handle.getAttribute('data-id');
+  var t = byId('tasks', id);
+  if (!t || t.status === 'done' || isTmp(id)) return;
+  drag = { id: id, startX: e.clientX, startY: e.clientY, pointerId: e.pointerId, moved: false, ghost: null, fromToday: !!(handle.closest && handle.closest('.today-board')) };
+  S.dragging = true;
+  try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+}
+function onTodayPointerMove(e) {
+  if (!drag || (drag.pointerId != null && e.pointerId !== drag.pointerId)) return;
+  var dx = e.clientX - drag.startX, dy = e.clientY - drag.startY;
+  if (!drag.moved) {
+    if (dx * dx + dy * dy < 64) return;
+    drag.moved = true;
+    var src = document.querySelector('.tab.on .item.task[data-id="' + CSS.escape(drag.id) + '"]') ||
+              document.querySelector('.item.task[data-id="' + CSS.escape(drag.id) + '"]');
+    if (src) src.classList.add('is-dragging');
+    var t = byId('tasks', drag.id);
+    var g = document.createElement('div');
+    g.className = 'drag-ghost';
+    g.textContent = t ? t.title : '';
+    document.body.appendChild(g);
+    drag.ghost = g;
+    document.body.classList.add('dragging-task');
+  }
+  e.preventDefault();
+  if (drag.ghost) {
+    drag.ghost.style.left = (e.clientX - 40) + 'px';
+    drag.ghost.style.top = (e.clientY - 20) + 'px';
+  }
+  var board = activeTodayBoard();
+  if (board) {
+    var r = board.getBoundingClientRect();
+    var pad = 28;
+    if (e.clientY >= r.top - pad && e.clientY <= r.bottom + pad && e.clientX >= r.left - pad && e.clientX <= r.right + pad) {
+      showPlaceholder(board, dropIndexAt(board, e.clientY, drag.id));
+    } else clearTodayPlaceholder();
+  }
+}
+function onTodayPointerUp(e) {
+  if (!drag || (drag.pointerId != null && e.pointerId !== drag.pointerId)) return;
+  var info = drag, t = byId('tasks', info.id);
+  var board = activeTodayBoard();
+  var over = board && board.classList.contains('over');
+  var idx = over ? dropIndexAt(board, e.clientY, info.id) : -1;
+  var moved = info.moved;
+  endDrag();
+  if (!moved || !t) return;
+  if (over) {
+    var ids = todayTasks().map(function (x) { return x.id; }).filter(function (id) { return id !== t.id; });
+    ids.splice(idx, 0, t.id);
+    if (ids.length === 1 && !info.fromToday) addToToday(t);
+    else reorderToday(ids);
+  } else if (info.fromToday) {
+    removeFromToday(t);
+  }
+}
+
 function taskSource(t) {
   var p = parseSrc(splitSrc(t.notes).block), s = summaryByKey(t.meetingKey);
   if (!p.kind && s) {
@@ -735,14 +1013,16 @@ function renderToday() {
     '<form class="quick" data-form="quickAgenda" autocomplete="off"><input name="title" placeholder="נושא חדש לאג׳נדה…" required maxlength="500">' +
     '<input type="hidden" name="date" value="' + esc(m ? m.date : '') + '"><button class="btn primary sm" type="submit">הוסף</button></form></section>';
 
-  var soon = S.data.tasks.filter(function (x) { return x.status !== 'done' && x.dueDate && x.dueDate <= addDays(t, 2); }).sort(taskSort);
+  var soon = S.data.tasks.filter(function (x) {
+    return x.status !== 'done' && x.dueDate && x.dueDate > t && x.dueDate <= addDays(t, 2) && !isOnTodayList(x);
+  }).sort(taskSort);
   var openCount = S.data.tasks.filter(function (x) { return x.status !== 'done'; }).length;
   var tasks = '<section class="card"><div class="card-head"><h2>✅ משימות קרובות</h2>' +
     '<button class="btn ghost sm" data-act="tab" data-v="tasks">כל הפתוחות (' + openCount + ')</button></div>' +
-    (soon.length ? '<ul class="list">' + soon.slice(0, 8).map(taskRow).join('') + '</ul>' : '<div class="empty">אין משימות שמועד היעד שלהן קרוב 🎉</div>') +
+    (soon.length ? '<ul class="list">' + soon.slice(0, 8).map(function (x) { return taskRow(x); }).join('') + '</ul>' : '<div class="empty">אין משימות שמועד היעד שלהן קרוב 🎉</div>') +
     '</section>';
 
-  $('#tab-today').innerHTML = meetingCard(m) + timerCard(m, alloc) + agenda + tasks;
+  $('#tab-today').innerHTML = meetingCard(m) + todayBoardHtml() + timerCard(m, alloc) + agenda + tasks;
 }
 
 function renderAgenda() {
@@ -788,7 +1068,8 @@ function renderTasks() {
   var list = all.filter(function (t) { return ownerMatch(t, f.owner) && statusMatch(t, f.status); }).sort(taskSort);
   var od = list.filter(isOverdue).length;
 
-  $('#tab-tasks').innerHTML = '<div class="page-title">✅ משימות' + (od ? ' <span class="chip bad">' + od + ' באיחור</span>' : '') + '</div>' +
+  $('#tab-tasks').innerHTML = todayBoardHtml() +
+    '<div class="page-title">✅ משימות' + (od ? ' <span class="chip bad">' + od + ' באיחור</span>' : '') + '</div>' +
     '<div class="chips">' + owners.map(function (o) {
       if (o[0] === 'me' && !S.me) return '';
       return '<button class="fchip' + (f.owner === o[0] ? ' on' : '') + '" data-act="fOwner" data-v="' + o[0] + '">' + o[1] + '<span class="n">' + countO(o[0]) + '</span></button>';
@@ -973,10 +1254,10 @@ function openTaskModal(t, preset) {
     (t && taskSource(t) ? '<div class="fld"><span class="muted small">מקור</span>' + srcHtml(t) + '</div>' : '') +
     (t ? '<div class="muted small">נוצרה ע״י ' + esc(person(t.createdBy)) + (t.createdAt ? ' · ' + esc(String(t.createdAt).slice(0, 16)) : '') + '</div>' : '');
   openModal(t ? 'עריכת משימה' : 'משימה חדשה', inner, function (d) {
-    var ms = summaryByKey(d.meetingKey), blk = t ? splitSrc(t.notes).block : '';
+    var ms = summaryByKey(d.meetingKey), parts = t ? splitNotes(t.notes) : { user: '', today: null, block: '' };
     var userNotes = String(d.notes || '').replace(/\s+$/, '');
     var patch = { title: d.title, owner: d.owner, assignee: d.assignee, dueDate: d.dueDate, status: d.status,
-      notes: blk ? (userNotes ? userNotes + '\n\n' + blk : blk) : userNotes,
+      notes: joinNotes(userNotes, parts.today, parts.block),
       meetingKey: d.meetingKey, sourceMeetingDate: ms ? ms.date : (t && t.meetingKey === d.meetingKey ? t.sourceMeetingDate || '' : '') };
     if (t) {
       mutate('tasks', function () { var r = byId('tasks', t.id); if (r) Object.assign(r, patch, { updatedAt: nowStamp() }); },
@@ -1094,6 +1375,9 @@ var ACT = {
   fOwner: function (d) { S.f.owner = d.v; localStorage.setItem('sync.fOwner', d.v); renderTasks(); },
   fStatus: function (d) { S.f.status = d.v; localStorage.setItem('sync.fStatus', d.v); renderTasks(); },
 
+  todayAdd: function (d) { var t = byId('tasks', d.id); if (t) addToToday(t); },
+  todayRemove: function (d) { var t = byId('tasks', d.id); if (t) removeFromToday(t); },
+
   newTask: function () { openTaskModal(null); },
   taskForMeeting: function (d) { openTaskModal(null, { meetingKey: d.v }); },
   sumMore: function () { S.sumLimit += 25; renderSumList(); },
@@ -1190,6 +1474,7 @@ document.addEventListener('submit', function (e) {
   var d = formData(f);
   if (f.dataset.form === 'quickAgenda') { f.reset(); addAgenda(d); }
   else if (f.dataset.form === 'agendaAdd') { f.reset(); addAgenda(d); toast('נוסף לאג׳נדה ✓'); }
+  else if (f.dataset.form === 'quickToday') { f.reset(); addQuickToday(d); }
 });
 document.addEventListener('toggle', function (e) {
   var el = e.target;
@@ -1213,6 +1498,10 @@ $('#fab').addEventListener('click', function () {
 document.addEventListener('visibilitychange', function () {
   if (!document.hidden && Date.now() - S.lastSync > 20000) refresh();
 });
+document.addEventListener('pointerdown', onTodayPointerDown);
+document.addEventListener('pointermove', onTodayPointerMove, { passive: false });
+document.addEventListener('pointerup', onTodayPointerUp);
+document.addEventListener('pointercancel', onTodayPointerUp);
 
 
 function showKeyPrompt() {
