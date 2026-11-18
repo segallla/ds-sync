@@ -25,6 +25,7 @@
 html,body{margin:0;background:var(--bg);color:var(--text);overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans Hebrew",Rubik,Roboto,Arial,sans-serif;
   font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+body{overflow-x:clip} /* clip (not hidden) so body is not a scroll container and the sticky header / contents bar stick */
 body.noscroll{overflow:hidden}
 button,input,select,textarea{font:inherit;color:inherit}
 a{color:var(--pri)}
@@ -310,6 +311,26 @@ body.dragging-task{overflow:hidden}
 .snooze-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
 .snooze-btns .btn{flex-direction:column;gap:2px;padding:12px 6px;min-height:64px}
 .snooze-btns .btn small{font-weight:500;color:var(--muted);font-size:.75rem}
+/* table of contents (Today tab): sticky chip bar on phones, fixed panel on the left on wide screens */
+.toc{position:sticky;top:var(--hdr-h,58px);z-index:15;display:flex;gap:6px;overflow-x:auto;background:var(--bg);
+  padding:6px 0 8px;margin:-8px 0 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.toc::-webkit-scrollbar{display:none}
+.toc-h{display:none}
+.toc button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;
+  padding:6px 11px;font-size:.8rem;cursor:pointer;white-space:nowrap;font-family:inherit}
+.toc button.on{border-color:var(--pri);color:var(--pri);font-weight:700}
+.toc button.toc-tab{color:var(--muted)}
+.card[id],section[id]{scroll-margin-top:calc(var(--hdr-h,58px) + 52px)}
+@media (min-width:1200px){
+  .toc{position:fixed;top:calc(var(--hdr-h,58px) + 16px);left:max(12px,calc(50% - 380px - 224px));width:200px;margin:0;
+    flex-direction:column;overflow:visible;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:10px;gap:2px}
+  .toc-h{display:block;font-size:.78rem;color:var(--muted);margin:0 6px 6px}
+  .toc button{border:0;border-radius:10px;text-align:right;padding:7px 10px;background:none}
+  .toc button:hover{background:var(--bg)}
+  .toc button.on{background:var(--bg)}
+  .card[id],section[id]{scroll-margin-top:calc(var(--hdr-h,58px) + 14px)}
+}
 </style>
 </head>
 <body>
@@ -368,7 +389,7 @@ if (!window.CSS) window.CSS = {};
 if (!CSS.escape) CSS.escape = function (s) { return String(s).replace(/[^a-zA-Z0-9_-]/g, function (c) { return '\\' + c; }); };
 var TOTAL_SEC = 15 * 60;
 var REFRESH_MS = 60000;
-var BUILD = '2026-11-12.3';
+var BUILD = '2026-11-18.1';
 
 var PEOPLE = { Dror: 'דרור', Shachar: 'שחר', Both: 'שנינו', Bot: 'אוטומציה' };
 var OWNER_OPTS = { Dror: 'דרור', Shachar: 'שחר', Both: 'שנינו' };
@@ -1022,7 +1043,7 @@ function todayOwnerDefault() { return S.me || 'Both'; }
 function todayBoardHtml() {
   var list = todayTasks();
   var owner = todayOwnerDefault();
-  return '<section class="card today-board"><div class="card-head"><h2>☀ משימות להיום</h2>' +
+  return '<section class="card today-board" id="todayBoard"><div class="card-head"><h2>☀ משימות להיום</h2>' +
     '<span class="chip' + (list.length ? '' : ' gray') + '">' + list.length + '</span></div>' +
     (list.length
       ? '<ul class="list today-list">' + list.map(function (t) { return taskRow(t, { inToday: true }); }).join('') + '</ul>'
@@ -1285,7 +1306,7 @@ function taskMeetingLabel(t) {
 
 function meetingCard(m) {
   if (!m) {
-    return '<section class="card meet"><div class="muted small">הפגישה הבאה</div><div class="meet-when">עוד לא נקבעה</div>' +
+    return '<section class="card meet" id="meetCard"><div class="muted small">הפגישה הבאה</div><div class="meet-when">עוד לא נקבעה</div>' +
       '<div class="meet-sub">ההצעה היומית לזמנים תופיע כאן אוטומטית.</div>' +
       '<div class="meet-actions"><button class="btn" data-act="meetingEdit">+ קביעת פגישה</button></div></section>';
   }
@@ -1302,7 +1323,7 @@ function meetingCard(m) {
         return '<button class="slot' + (tm === m.time && m.pickedBy ? ' on' : '') + '" data-act="pickSlot" data-v="' + esc(tm) + '">' + esc(tm) + '</button>';
       }).join('') + '</div>';
   }
-  return '<section class="card meet">' +
+  return '<section class="card meet" id="meetCard">' +
     '<div style="display:flex;align-items:center;gap:8px"><span class="muted small grow">הפגישה הבאה</span>' +
       '<span class="pill">' + esc(MEETING_STATUS[m.status] || m.status) + '</span></div>' +
     '<div class="meet-when">' + esc(relDay(m.date)) + (m.time ? ' · <span dir="ltr">' + esc(m.time) + '</span>' : '') + '</div>' +
@@ -1353,7 +1374,7 @@ function timerCard(m, alloc) {
 function renderToday() {
   var m = nextMeeting(), items = agendaFor(m), alloc = allocate(items), t = todayStr();
   var over = alloc.total > TOTAL_SEC;
-  var agenda = '<section class="card"><div class="card-head"><h2>🗂️ אג׳נדה' + (m ? ' לפגישה' : '') + '</h2>' +
+  var agenda = '<section class="card" id="todayAgenda"><div class="card-head"><h2>🗂️ אג׳נדה' + (m ? ' לפגישה' : '') + '</h2>' +
     '<span class="chip ' + (over ? 'bad' : 'gray') + '">' + Math.round(alloc.total / 60) + ' / 15 דק׳</span></div>' +
     (items.length ? '<ul class="list">' + items.map(function (a) { return agendaRow(a, alloc.map[a.id], { showDate: true }); }).join('') + '</ul>'
       : '<div class="empty">אין עדיין נושאים. הוסיפו נושא 👇</div>') +
@@ -1365,13 +1386,57 @@ function renderToday() {
     return x.status !== 'done' && x.dueDate && x.dueDate > t && x.dueDate <= addDays(t, 2) && !isOnTodayList(x) && !isSnoozed(x);
   }).sort(taskSort);
   var openCount = S.data.tasks.filter(function (x) { return x.status !== 'done'; }).length;
-  var tasks = '<section class="card"><div class="card-head"><h2>✅ משימות קרובות</h2>' +
+  var tasks = '<section class="card" id="soonTasks"><div class="card-head"><h2>✅ משימות קרובות</h2>' +
     '<button class="btn ghost sm" data-act="tab" data-v="tasks">כל הפתוחות (' + openCount + ')</button></div>' +
     (soon.length ? '<ul class="list">' + soon.slice(0, 8).map(function (x) { return taskRow(x); }).join('') + '</ul>' : '<div class="empty">אין משימות שמועד היעד שלהן קרוב 🎉</div>') +
     '</section>';
 
-  $('#tab-today').innerHTML = briefCards() + meetingCard(m) + todayBoardHtml() + timerCard(m, alloc) + agenda + cornerCard() + tasks;
+  var body = briefCards() + meetingCard(m) + todayBoardHtml() + timerCard(m, alloc) + agenda + cornerCard() + tasks;
+  $('#tab-today').innerHTML = tocHtml(body) + body;
+  tocMark();
 }
+
+/* Table of contents: jump straight to a section instead of scrolling (asked for in the 18.11 sync). */
+var TOC_ITEMS = [
+  ['briefDecisions', '📌 החלטות'], ['briefPrep', '🗓️ הכנה'], ['meetCard', '📅 הפגישה'], ['todayBoard', '☀ להיום'],
+  ['timerCard', '⏱ טיימר'], ['todayAgenda', '🗂️ אג׳נדה'], ['cornerCard', '🧭 הפינה היומית'], ['soonTasks', '✅ משימות קרובות']
+];
+function tocHtml(body) {
+  var items = TOC_ITEMS.filter(function (it) { return body.indexOf('id="' + it[0] + '"') >= 0; });
+  return '<nav class="toc" id="toc" aria-label="תוכן עניינים"><div class="toc-h">תוכן עניינים</div>' +
+    items.map(function (it) { return '<button type="button" data-act="toc" data-v="' + it[0] + '">' + esc(it[1]) + '</button>'; }).join('') +
+    '<button type="button" class="toc-tab" data-act="tab" data-v="summaries">📝 סיכומים</button>' +
+    '<button type="button" class="toc-tab" data-act="tab" data-v="tasks">📋 כל המשימות</button></nav>';
+}
+function setHdrH() {
+  var h = document.querySelector('header.top');
+  if (h) document.documentElement.style.setProperty('--hdr-h', h.offsetHeight + 'px');
+}
+var tocRaf = 0;
+function tocMark() {
+  var nav = document.getElementById('toc');
+  if (!nav || S.tab !== 'today') return;
+  var lim = (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--hdr-h'), 10) || 58) + 70, cur = '';
+  nav.querySelectorAll('[data-act=toc]').forEach(function (b) {
+    var el = document.getElementById(b.dataset.v);
+    if (el && el.getBoundingClientRect().top <= lim) cur = b.dataset.v;
+  });
+  if (!cur) { var f = nav.querySelector('[data-act=toc]'); cur = f ? f.dataset.v : ''; }
+  nav.querySelectorAll('[data-act=toc]').forEach(function (b) {
+    var on = b.dataset.v === cur;
+    if (on && !b.classList.contains('on') && nav.scrollWidth > nav.clientWidth && b.scrollIntoView) {
+      var l = b.offsetLeft - (nav.clientWidth - b.offsetWidth) / 2;
+      nav.scrollLeft = l;
+    }
+    b.classList.toggle('on', on);
+  });
+}
+window.addEventListener('scroll', function () {
+  if (tocRaf) return;
+  tocRaf = (window.requestAnimationFrame || setTimeout)(function () { tocRaf = 0; tocMark(); });
+}, { passive: true });
+window.addEventListener('resize', setHdrH);
+setHdrH();
 
 function renderAgenda() {
   var d = defaultAgendaDate(), m = nextMeeting();
@@ -1718,6 +1783,12 @@ function setAgendaStatus(id, status) {
 /* ---------------- Actions ---------------- */
 var ACT = {
   tab: function (d) { S.tab = d.v; localStorage.setItem('sync.tab', S.tab); renderAll(); window.scrollTo(0, 0); },
+  toc: function (d) {
+    var el = document.getElementById(d.v);
+    if (!el) return;
+    setHdrH();
+    try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { el.scrollIntoView(true); }
+  },
   setMe: function (d) {
     S.me = d.v; localStorage.setItem('sync.me', S.me);
     if ($('#modal').dataset.lock) closeModal();
