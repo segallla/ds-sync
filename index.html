@@ -379,6 +379,7 @@ details.card>summary{cursor:pointer}
   body{padding-right:190px}
   .fab{bottom:24px}
 }
+.home-head.compact{padding:8px 12px}.home-head.compact .hh-row{align-items:center}.live-next{margin:8px 0}
 </style>
 </head>
 <body>
@@ -440,7 +441,7 @@ if (!window.CSS) window.CSS = {};
 if (!CSS.escape) CSS.escape = function (s) { return String(s).replace(/[^a-zA-Z0-9_-]/g, function (c) { return '\\' + c; }); };
 var TOTAL_SEC = 15 * 60;
 var REFRESH_MS = 60000;
-var BUILD = '2026-11-19.1';
+var BUILD = '2026-11-19.2';
 
 var PEOPLE = { Dror: 'דרור', Shachar: 'שחר', Both: 'שנינו', Bot: 'אוטומציה' };
 var OWNER_OPTS = { Dror: 'דרור', Shachar: 'שחר', Both: 'שנינו' };
@@ -2466,6 +2467,7 @@ function liveHtml(m) {
     (viewT ? '<div class="back-shared"><span>את/ה מעיין/ת בנושא אחר. הנושא המשותף: <b dir="auto">' + esc(curT.name) + '</b></span>' +
       '<button type="button" class="btn primary sm" data-act="liveBack">חזרה לנושא המשותף</button></div>' : '') +
     '<ul class="topics">' + topicRow(T, { live: true, expanded: true }) + '</ul>' +
+    (viewT ? '' : '<button type="button" class="btn primary block live-next" data-act="liveNext" data-id="' + esc(cur.id) + '">הבא ›</button>') +
     '<div class="live-quick">' +
       '<button type="button" class="btn sm" data-act="quickAsk" data-k="החלטה" data-v="' + esc(T.key) + '">✅ החלטה</button>' +
       '<button type="button" class="btn sm" data-act="quickAsk" data-k="נדחה" data-v="' + esc(T.key) + '">💤 דחייה לתאריך</button>' +
@@ -2473,7 +2475,6 @@ function liveHtml(m) {
       '<button type="button" class="btn sm" data-act="quickAsk" data-k="להמשך עבודה" data-v="' + esc(T.key) + '">⏸ להמשך עבודה</button>' +
       '<button type="button" class="btn sm" data-act="quickAsk" data-k="סיום הסנכרון והמשך על העסקה" data-v="' + esc(T.key) + '">⏹ סיום והמשך על העסקה</button>' +
     '</div>' +
-    (viewT ? '' : '<button type="button" class="btn primary block" data-act="liveNext" data-id="' + esc(cur.id) + '">הבא ›</button>') +
     '<div class="muted small" style="margin-top:6px">אפשר גם לסכם בקול כרגיל. מה שנאמר רק בהקלטה יופיע אחרי עיבוד התמלול.</div>' +
     '<details class="live-list"><summary>כל הנושאים בשיחה (' + items.length + ')</summary><ol>' + items.map(function (a) {
       var tk = topicOf(a.title).key;
@@ -2490,7 +2491,12 @@ function renderHome() {
   if (ph === 'before' && (!m || m.date !== todayStr())) primary = ['liveStart', 'מתחילים מהנושא הראשון'];
   if (ph === 'after') S.liveLocal = false;
   var att = m ? S.attended[m.id] : '';
-  var head = '<section class="card home-head" id="homeHead">' +
+  var live = (ph === 'during' && started) || S.liveLocal;
+  var head = live ? '<section class="card home-head compact" id="homeHead"><div class="hh-row"><div class="grow"><span class="muted small">הסנכרון עכשיו · </span><b>' + esc(when) + '</b>' +
+      (ob.waiting ? ' <span class="chip warn small">' + ob.waiting + ' ממתינים לשמירה</span>' : '') +
+      (ob.errors ? ' <span class="chip bad small">' + ob.errors + ' לא נשמרו</span> <button type="button" class="btn ghost sm" data-act="obRetryAll">נסו שוב</button>' : '') + '</div>' +
+      (teams ? '<a class="btn sm" href="' + esc(teams) + '" target="_blank" rel="noopener">🎥 Teams</a>' : '') + '</div></section>' :
+    '<section class="card home-head" id="homeHead">' +
     '<div class="hh-row"><div class="grow"><div class="muted small">' + (ph === 'during' ? 'הסנכרון עכשיו' : ph === 'after' ? 'הסנכרון של היום' : 'הסנכרון הבא') + '</div>' +
       '<div class="hh-when">' + esc(when) + (m && m.status === 'proposed' ? ' <span class="chip warn small">הוצעה, ממתין לבחירה</span>' : '') + '</div></div>' +
       (teams ? '<a class="btn" href="' + esc(teams) + '" target="_blank" rel="noopener">🎥 Teams</a>' : '') + '</div>' +
@@ -2504,7 +2510,6 @@ function renderHome() {
       '<button type="button" class="btn ghost sm" data-act="attend" data-v="הייתי">הייתי בשיחה</button><button type="button" class="btn ghost sm" data-act="attend" data-v="עודכנתי">לא הייתי, עודכנתי</button>') + '</div>' : '') +
     '</section>';
   var body = '';
-  var live = (ph === 'during' && started) || S.liveLocal;
   if (live) body += liveHtml(m);
   if (ph === 'after') body += postCallHtml(m, syncEndLine(m) ? 'סיכום הסנכרון (הסנכרון הסתיים, ההמשך על העסקה)' : 'סיכום השיחה');
   if (!live) {
