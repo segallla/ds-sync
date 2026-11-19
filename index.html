@@ -331,6 +331,54 @@ body.dragging-task{overflow:hidden}
   .toc button.on{background:var(--bg)}
   .card[id],section[id]{scroll-margin-top:calc(var(--hdr-h,58px) + 14px)}
 }
+/* home screen (BUILD 2026-11-19.1) */
+.home-head .hh-row{display:flex;align-items:center;gap:10px}
+.hh-when{font-size:1.25rem;font-weight:800}
+.hh-main{margin-top:12px;font-size:1.05rem;padding:14px}
+.hh-sub{margin-top:8px;font-size:.8rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.post-st{margin:-4px 0 6px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.hh-att{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.btn.block{display:flex;width:100%;justify-content:center}
+.linkish{background:none;border:0;padding:0;color:var(--pri);cursor:pointer;font:inherit;text-align:start;text-decoration:underline}
+ul.topics{list-style:none;margin:0;padding:0}
+.topic{border:1px solid var(--line);border-radius:12px;margin:8px 0;background:var(--card)}
+.topic.on{border-color:var(--pri)}
+.topic-h{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:2px;width:100%;padding:10px 12px;cursor:pointer}
+.topic-name{font-weight:800}
+.topic-ch{font-size:.9rem;color:var(--text)}
+.topic-why{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}
+.topic-b{padding:0 12px 12px}
+.tl{font-size:.9rem;margin:3px 0}
+.tl b{color:var(--muted);font-weight:700}
+form.upd{display:flex;gap:6px;margin-top:8px}
+form.upd input,.search input{flex:1;min-width:0;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:16px}
+.search input{width:100%}
+.topic-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center}
+.ob{margin-top:6px}
+.chip.small{font-size:.72rem}
+.src-wrap{margin-top:8px}
+.live-meta{display:flex;gap:10px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-bottom:4px}
+.live-meta .warn{color:var(--warn);font-weight:700}
+.back-shared{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--warn-2);border-radius:10px;padding:8px;margin:6px 0;font-size:.88rem}
+.live-quick{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.live-quick .btn{justify-content:center}
+.live-list{margin-top:8px}.live-list ol{margin:6px 0;padding-inline-start:20px}
+ul.pc{margin:2px 0 6px;padding-inline-start:18px}ul.pc li{margin:3px 0;font-size:.92rem}ul.pc li.done{color:var(--muted);text-decoration:line-through}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.reconnect,.review,.search{margin-top:10px}
+li.rv{padding:8px 0;border-bottom:1px solid var(--line)}
+.trec{border-bottom:1px solid var(--line);padding:8px 0}
+details.card>summary{cursor:pointer}
+.nav-in{grid-template-columns:repeat(5,1fr)}
+@media (min-width:1000px){
+  nav.bottom{top:0;bottom:0;right:0;left:auto;width:190px;border-top:0;border-left:1px solid var(--line);padding-top:70px}
+  .nav-in{display:flex;flex-direction:column;height:auto;gap:4px;padding:0 10px}
+  .nav-in button{flex-direction:row;justify-content:flex-start;gap:10px;padding:12px;border-radius:10px;font-size:.95rem}
+  .nav-in button.on{background:var(--pri-2)}
+  .nav-in .badge{position:static;margin-inline-start:auto}
+  body{padding-right:190px}
+  .fab{bottom:24px}
+}
 </style>
 </head>
 <body>
@@ -346,6 +394,7 @@ body.dragging-task{overflow:hidden}
 </header>
 
 <main id="app">
+  <section class="tab" id="tab-home"></section>
   <section class="tab" id="tab-today"></section>
   <section class="tab" id="tab-agenda"></section>
   <section class="tab" id="tab-tasks"></section>
@@ -356,10 +405,11 @@ body.dragging-task{overflow:hidden}
 
 <nav class="bottom">
   <div class="nav-in">
-    <button type="button" data-act="tab" data-v="today"><span class="ic">🏠</span>היום</button>
+    <button type="button" data-act="tab" data-v="home"><span class="ic">🏠</span>בית</button>
+    <button type="button" data-act="tab" data-v="today"><span class="ic">☀</span>סדר היום</button>
     <button type="button" data-act="tab" data-v="agenda"><span class="ic">🗂️</span>אג׳נדה<span class="badge blue" id="bAgenda" hidden></span></button>
     <button type="button" data-act="tab" data-v="tasks"><span class="ic">✅</span>משימות<span class="badge" id="bTasks" hidden></span></button>
-    <button type="button" data-act="tab" data-v="summaries"><span class="ic">📝</span>סיכומים</button>
+    <button type="button" data-act="tab" data-v="summaries"><span class="ic">📝</span>היסטוריה</button>
   </div>
 </nav>
 
@@ -374,6 +424,7 @@ body.dragging-task{overflow:hidden}
 /* ---------------- Config ---------------- */
 var KEY = (function () {
   var LS = 'ds_sync_key', h = (location.hash || '').replace(/^#(k=)?/, '').trim();
+  if (/^(task|topic)=/.test(h)) { window.__dsRoute = decodeURIComponent(h); h = ''; } // deep link (#task=<id>), not a key
   try {
     if (h) {
       localStorage.setItem(LS, h);
@@ -389,7 +440,7 @@ if (!window.CSS) window.CSS = {};
 if (!CSS.escape) CSS.escape = function (s) { return String(s).replace(/[^a-zA-Z0-9_-]/g, function (c) { return '\\' + c; }); };
 var TOTAL_SEC = 15 * 60;
 var REFRESH_MS = 60000;
-var BUILD = '2026-11-18.1';
+var BUILD = '2026-11-19.1';
 
 var PEOPLE = { Dror: 'דרור', Shachar: 'שחר', Both: 'שנינו', Bot: 'אוטומציה' };
 var OWNER_OPTS = { Dror: 'דרור', Shachar: 'שחר', Both: 'שנינו' };
@@ -532,16 +583,18 @@ function call(action, payload) {
 function refresh() {
   if (S.pending > 0 || S.refreshing || S.dragging) return;
   var a = document.activeElement;
-  if (S.loaded && a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && $('#app').contains(a) && a.value) return; // don't wipe typing
+  if (S.loaded && a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && $('#app').contains(a) && a.value && !(a.dataset && a.dataset.draft)) return; // don't wipe typing (draft fields are kept and restored)
   var rev = S.rev;
   S.refreshing = true; setSync();
+  var t0 = Date.now();
   call('getAll').then(function (res) {
     if (S.pending > 0 || S.rev !== rev) return; // local change in flight; next cycle syncs
     var ag = res.agenda || [];
     S.data = { meetings: res.meetings || [], agenda: ag.filter(function (a) { return !isCorner(a) && !isBrief(a); }), tasks: res.tasks || [],
       summaries: res.summaries || [], corners: ag.filter(isCorner).sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); }),
       briefs: ag.filter(isBrief).sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); }) };
-    S.loaded = true; S.error = ''; S.lastSync = Date.now();
+    S.loaded = true; S.error = ''; S.lastSync = Date.now(); S.lastPollMs = Date.now() - t0;
+    reconcileOutbox();
     renderAll();
   }).catch(function (e) {
     if (!S.loaded) { S.error = errMsg(e); renderAll(); }
@@ -820,7 +873,7 @@ function briefCards() {
     '<div class="brief-next"><b>' + esc(nd ? fmtDate(nd) : '') + '</b>' +
       (time ? '<span dir="ltr">' + esc(time) + ' NY</span>' : '<span class="chip warn">טרם נקבע</span>') +
       (teams ? '<a class="btn primary sm" href="' + esc(teams) + '" target="_blank" rel="noopener">הצטרפות ל-Teams</a>' : '') + '</div>' +
-    '<div class="brief-h">אג׳נדה מוצעת</div>' + briefItems(sec['אג׳נדה מוצעת'] || [], 5, 'עוד באג׳נדה') +
+    '<div class="brief-h">אג׳נדה מוצעת</div>' + briefItems((sec['אג׳נדה מוצעת'] || []).filter(function (x) { return x.tag !== 'פינה'; }), 5, 'עוד באג׳נדה') +
     (qs.length ? '<details open><summary>❓ שאלות להכריע (' + qs.length + ')</summary>' + briefItems(qs, 9) + '</details>' : '') +
     (prep ? '<details' + (S.me ? ' open' : '') + '><summary>🎒 מה כל אחד מכין</summary>' + prep + '</details>' : '') +
     (comHtml ? '<details><summary>🤝 התחייבויות מהשיחה (דרור ' + dr.length + ' · שחר ' + sh.length + ' · שנינו ' + bo.length + ')</summary>' + comHtml + '</details>' : '') +
@@ -841,7 +894,7 @@ function renderAll() {
     $('#fab').hidden = true;
     return;
   }
-  renderToday(); renderAgenda(); renderTasks(); renderSummaries(); renderBadges();
+  renderHome(); renderToday(); renderAgenda(); renderTasks(); renderSummaries(); renderBadges();
   $('#fab').hidden = !(S.tab === 'tasks' || S.tab === 'summaries' || S.tab === 'agenda');
   tick();
 }
@@ -1943,6 +1996,14 @@ document.addEventListener('submit', function (e) {
   if (f.dataset.form === 'quickAgenda') { f.reset(); addAgenda(d); }
   else if (f.dataset.form === 'agendaAdd') { f.reset(); addAgenda(d); toast('נוסף לאג׳נדה ✓'); }
   else if (f.dataset.form === 'quickToday') { f.reset(); addQuickToday(d); }
+  else if (f.dataset.form === 'topicUpd') {
+    var T = findTopic(f.dataset.key), txt = String(d.text || '').trim();
+    if (!T || !txt) return;
+    if (!S.me) { openWho(); return; }
+    var inp = f.querySelector('[data-draft]');
+    postLine(T.target.coll, T.target.rec, mkLine('עדכון', txt));
+    if (inp) setDraft(inp.dataset.draft, '');
+  }
 });
 document.addEventListener('toggle', function (e) {
   var el = e.target;
@@ -1994,14 +2055,744 @@ function showKeyPrompt() {
   document.getElementById('kb').onclick = go;
   document.getElementById('kp').onkeydown = function (e) { if (e.key === 'Enter') go(); };
 }
+/* ================= Home screen (BUILD 2026-11-19.1) =================
+   Built on the existing backend only (no redeploy). Shared state comes from existing fields:
+   - the meeting = the Meetings row for today (else the next one); phase = before / during / after from its date+time
+     and durationMin, or "after" once someone pressed "סיום הסנכרון" (a dated update line, see below) or the row is done.
+   - the shared current topic in the call = the first open Agenda item for that meeting (Agenda.order, Agenda.status).
+     "הבא" marks exactly that item discussed (by id), so two presses, or a press on a stale screen, advance once.
+   - updates are plain dated lines in the user part of Tasks.notes / Agenda.details (like the agent's "18.11 בשיחה:" lines):
+       DD.MM HH:mm · דרור|שחר · <kind>[: text]
+     kinds: עדכון, החלטה, רגע בהקלטה MM:SS, נדחה עד YYYY-MM-DD, להמשך עבודה, סיום הסנכרון והמשך על העסקה
+   - personal state (draft text, which topic I am browsing, filters, "עודכנתי" / "הייתי") stays in localStorage.
+   Nothing here is a new record type; the hidden ⟦היום⟧ / ⟦נדחה עד⟧ / ⟦מקור⟧ parts of the notes are kept on every write. */
+var FIELD_MAX = 5000; // Code.gs str_() limit for notes / details; never let a write cut the source block
+var LIVE_POLL_MS = 10000, IDLE_POLL_MS = REFRESH_MS;
+var UPD_RE = /^(\d{2})\.(\d{2})(?: (\d{2}):(\d{2}))? · (דרור|שחר|אוטומציה) · ([^:]+?)(?:: ([\s\S]*))?$/;
+var OLD_RE = /^(\d{2})\.(\d{2}) (בשיחה|בהודעת [^:]{1,24}|בהמשך [^:]{1,40}):\s*(.*)$/;
+var KIND_ICON = { 'עדכון': '✍️', 'החלטה': '✅', 'להמשך עבודה': '⏸', 'סיום הסנכרון והמשך על העסקה': '⏹', 'עודכנתי': '👁' };
+
+function lsGet(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+S.outbox = lsGet('sync.outbox', []);
+S.drafts = lsGet('sync.drafts', {});
+S.seen = lsGet('sync.seen', {});          // personal: topics I marked "עודכנתי" (key -> stamp)
+S.attended = lsGet('sync.attended', {});  // personal: meeting id -> 'הייתי' | 'עודכנתי'
+S.viewKey = '';                           // personal: topic I am browsing during the call
+S.open = {};                              // personal: expanded topics / source boxes
+S.homePanel = '';                         // personal: '' | 'all' | 'reconnect' | 'review' | 'search'
+S.lastPollMs = 0;                         // measured duration of the last getAll
+
+function yearFor(dd, mm) { var t = todayStr(), y = +t.slice(0, 4); if (+mm > +t.slice(5, 7) + 1) y--; return y + '-' + mm + '-' + dd; }
+function parseUpd(l) {
+  l = String(l || '').trim();
+  var m = l.match(UPD_RE);
+  if (m) return { date: yearFor(m[1], m[2]), time: m[3] ? m[3] + ':' + m[4] : '', who: m[5], kind: m[6].trim(), text: (m[7] || '').trim(), raw: l, app: true };
+  m = l.match(OLD_RE);
+  if (m) {
+    var url = (m[4].match(/\(tl;dv: (https?:\/\/[^)\s]+)\)/) || [])[1] || '';
+    return { date: yearFor(m[1], m[2]), time: '', who: m[3].indexOf('בהודעת') === 0 ? m[3].replace('בהודעת ', '') : '', kind: m[3],
+      text: m[4].replace(/\s*\(tl;dv: [^)]*\)\s*\.?$/, ''), url: url, raw: l };
+  }
+  return null;
+}
+function fieldOf(coll) { return coll === 'tasks' ? 'notes' : 'details'; }
+function recLines(coll, rec) {
+  if (!rec) return [];
+  return splitNotes(rec[fieldOf(coll)]).user.split('\n').map(parseUpd).filter(Boolean);
+}
+function lineStamp() { var p = partsInTz(new Date(), TZ); return p.day + '.' + p.month + ' ' + p.hour + ':' + p.minute; }
+function mkLine(kind, text) {
+  return lineStamp() + ' · ' + (person(S.me) || 'לא ידוע') + ' · ' + kind + (text ? ': ' + String(text).replace(/\s+/g, ' ').replace(/[\u2014]/g, ',').trim() : '');
+}
+function stampOf(u) { return u.date + ' ' + (u.time || '00:00'); }
+
+/* ---------- the meeting ---------- */
+function homeMeeting() {
+  var t = todayStr();
+  var tm = S.data.meetings.filter(function (m) { return m.date === t && m.status !== 'cancelled'; }).sort(byDateTime);
+  if (tm.length) {
+    // two rows the same day (follow-up): the main sync is the earliest; the later ones are segments of it
+    return tm[0];
+  }
+  return nextMeeting();
+}
+function meetingStartMs(m) { return m && m.time ? nyInstant(m.date, m.time).getTime() : 0; }
+function meetingEndMs(m) { return meetingStartMs(m) + (+m.durationMin || 15) * 60000; }
+function previousSync(m) {
+  var lim = m && m.time ? meetingStartMs(m) : Date.now();
+  return S.data.meetings.filter(function (x) {
+    return x.status !== 'cancelled' && x.time && x !== m && meetingStartMs(x) < Math.min(lim, Date.now());
+  }).sort(byDateTime).pop() || null;
+}
+/** Lines written today with kind "סיום הסנכרון…" mean the sync part is over (shared, from the data). */
+function syncEndLine(m) {
+  if (!m || m.date !== todayStr()) return null;
+  var hit = null;
+  allRecs().forEach(function (r) { recLines(r.coll, r.rec).forEach(function (u) { if (u.app && u.date === m.date && /^סיום הסנכרון/.test(u.kind)) hit = u; }); });
+  return hit;
+}
+function phaseOf(m) {
+  if (!m || !m.time || m.status === 'proposed') return 'before';
+  var now = Date.now(), st = meetingStartMs(m), en = meetingEndMs(m);
+  if (m.date === todayStr() && (m.status === 'done' || syncEndLine(m))) return 'after';
+  if (now < st - 5 * 60000) return 'before';
+  if (now <= en + 10 * 60000) return 'during';
+  return m.date === todayStr() ? 'after' : 'before';
+}
+/** Someone already started this sync: an agenda item for it was discussed or reordered since 30 min before the start. */
+function syncStarted(m) {
+  if (!m || !m.time || m.date !== todayStr()) return false;
+  var from = m.date + ' ' + hm(new Date(meetingStartMs(m) - 30 * 60000));
+  return S.data.agenda.some(function (a) { return !isCorner(a) && !isBrief(a) && (!a.date || a.date <= m.date) && String(a.updatedAt || '') >= from && (a.status === 'discussed' || +a.order > 0); });
+}
+function hm(d) { var p = partsInTz(d, TZ); return p.hour + ':' + p.minute; }
+function liveWindow() {
+  var m = homeMeeting();
+  if (!m || !m.time || m.date !== todayStr()) return false;
+  var now = Date.now();
+  return now >= meetingStartMs(m) - 10 * 60000 && now <= meetingEndMs(m) + 20 * 60000;
+}
+
+/* ---------- topics ---------- */
+function allRecs() {
+  var out = [];
+  S.data.tasks.forEach(function (t) { out.push({ coll: 'tasks', rec: t }); });
+  S.data.agenda.forEach(function (a) { out.push({ coll: 'agenda', rec: a }); });
+  return out;
+}
+function cleanTitle(s) { return String(s || '').replace(/^\s*((תזכורת|מייל שלא נענה)\s*:\s*)+/, '').trim(); }
+function topicOf(title) {
+  var t = cleanTitle(title), i = t.indexOf(':'), head = '', rest = t;
+  if (i > 0 && i <= 40) { head = t.slice(0, i).trim(); rest = t.slice(i + 1).trim(); }
+  // "עומרי: Winona: …" -> the site, not the person
+  var j = rest.indexOf(':');
+  if (head && !/[A-Za-z0-9]/.test(head) && head.split(/\s+/).length <= 2 && j > 0 && j <= 40) { head = rest.slice(0, j).trim(); rest = rest.slice(j + 1).trim(); }
+  var name = head || t;
+  return { key: name.toLowerCase().replace(/[\s"'׳״().,\-\/]+/g, ' ').trim(), name: name, rest: head ? rest : '' };
+}
+function taskForAgenda(a) {
+  var x = String(a.externalId || ''), m = x.match(/^task:(t_[0-9a-f]+)/);
+  if (m) return byId('tasks', m[1]);
+  if (/^mail:/.test(x)) return S.data.tasks.filter(function (t) { return t.externalId === x; })[0] || null;
+  return null;
+}
+function ownerHe(o) { return o === 'Dror' ? 'דרור' : o === 'Shachar' ? 'שחר' : o === 'Both' ? 'שנינו' : ''; }
+function needsMe(t) { return !!t && !!S.me && (t.owner === S.me || t.owner === 'Both'); }
+
+/** Build topics from shared data only, so both devices rank the same way. */
+function buildTopics(m) {
+  var prev = previousSync(m), cut = prev ? prev.date + ' ' + prev.time : '0000';
+  var mdate = m ? m.date : nextWorkday(todayStr());
+  var map = {}, order = [];
+  function get(name, key) {
+    if (!map[key]) { map[key] = { key: key, name: name, tasks: [], agenda: [], changes: [], score: 0, why: [] }; order.push(key); }
+    return map[key];
+  }
+  var ag = agendaFor(m);
+  ag.forEach(function (a, i) {
+    var tp = topicOf(a.title), T = get(tp.name, tp.key);
+    T.agenda.push(a);
+    var lt = taskForAgenda(a);
+    if (lt && T.tasks.indexOf(lt) < 0) T.tasks.push(lt);
+    // on the agenda in the order we chose; an item carried over unchanged from before the last sync weighs little
+    var fresh = !prev || (a.date && a.date >= prev.date) || String(a.createdAt || '') > cut;
+    var chosen = a.createdBy === 'Dror' || a.createdBy === 'Shachar' || (+a.order > 0 && String(a.updatedAt || '') > cut);
+    T.score += (fresh || chosen ? 26 : 4) + (chosen ? 14 : 0) + Math.max(0, 6 - i);
+    var w = fresh || chosen ? 'בסדר היום' : 'נשאר מסדר יום קודם';
+    if (T.why.indexOf(w) < 0) T.why.push(w);
+  });
+  S.data.tasks.forEach(function (t) {
+    if (t.status === 'done' || isSnoozed(t)) return;
+    var lines = recLines('tasks', t).filter(function (u) {
+      // new since the last sync: dated after it; "בשיחה" lines from that sync are the sync itself
+      if (u.date > cut.slice(0, 10)) return true;
+      return u.date === cut.slice(0, 10) && u.time && stampOf(u) > cut;
+    });
+    var created = String(t.createdAt || '') > cut && t.createdBy !== 'Bot';
+    var due = t.dueDate && t.dueDate <= mdate;
+    var inAgenda = ag.some(function (a) { return taskForAgenda(a) === t; });
+    if (!lines.length && !created && !due && !inAgenda) return;
+    var tp = topicOf(t.title), T = get(tp.name, tp.key);
+    if (T.tasks.indexOf(t) < 0) T.tasks.push(t);
+    lines.forEach(function (u) { T.changes.push({ u: u, coll: 'tasks', rec: t }); });
+    if (lines.length || created) { T.score += 20 + 4 * Math.min(lines.length, 3); if (T.why.indexOf('שינוי מאז השיחה') < 0) T.why.push('שינוי מאז השיחה'); }
+    if (due) { T.score += t.dueDate < todayStr() ? (t.dueDate < (prev ? prev.date : todayStr()) ? 2 : 8) : 14; if (T.why.indexOf('מגיע למועד') < 0) T.why.push('מגיע למועד'); }
+    if (t.owner === 'Both' && !t.assignee) { T.score += 6; if (T.why.indexOf('צריך את שנינו') < 0) T.why.push('צריך את שנינו'); }
+  });
+  ag.forEach(function (a) {
+    recLines('agenda', a).forEach(function (u) {
+      if (u.date >= cut.slice(0, 10) && (!u.time || stampOf(u) > cut)) map[topicOf(a.title).key].changes.push({ u: u, coll: 'agenda', rec: a });
+    });
+  });
+  var list = order.map(function (k) { return map[k]; });
+  list.forEach(function (T) {
+    T.changes.sort(function (a, b) { return stampOf(b.u).localeCompare(stampOf(a.u)); });
+    T.primary = T.agenda[0] ? { coll: 'agenda', rec: T.agenda[0] } : { coll: 'tasks', rec: T.tasks.slice().sort(function (a, b) { return String(b.updatedAt).localeCompare(String(a.updatedAt)); })[0] };
+    T.target = T.tasks[0] ? { coll: 'tasks', rec: T.tasks.slice().sort(function (a, b) { return String(b.updatedAt).localeCompare(String(a.updatedAt)); })[0] } : T.primary;
+    // agenda chosen for this meeting is the strongest signal of "our priority"
+  });
+  list.sort(function (a, b) { return b.score - a.score || a.name.localeCompare(b.name); });
+  return { list: list, cut: cut, prev: prev };
+}
+function priorityTopics(m) {
+  var all = buildTopics(m).list;
+  var mine = all.filter(function (T) { return !S.seen[T.key + '|' + topicStamp(T)]; });
+  return { top: mine.slice(0, 3), rest: all.filter(function (T) { return mine.slice(0, 3).indexOf(T) < 0; }), all: all };
+}
+function topicStamp(T) { var c = T.changes[0]; return c ? stampOf(c.u) : String((T.primary.rec || {}).updatedAt || ''); }
+
+/** The three lines: what happened and who said, what is still open, who has the next step and when. */
+function topicLines(T) {
+  var t = T.target.rec || {}, pr = T.primary.rec || {};
+  var c = T.changes[0], happened = '';
+  if (c) happened = (c.u.who ? c.u.who + ' · ' : '') + (c.u.app ? c.u.kind + (c.u.text ? ': ' : '') : '') + c.u.text + ' (' + shortDate(c.u.date) + (c.u.time ? ' ' + c.u.time : '') + ')';
+  else {
+    var src = T.target.coll === 'tasks' ? taskSource(t) : null;
+    if (src && src.ctx) happened = src.ctx;
+    else { var sp = splitNotes(pr.details || '').block; var ps = sp ? parseSrc(sp) : null; if (ps && ps.ctx) happened = ps.ctx; }
+  }
+  var open = topicOf(t.title || pr.title).rest || cleanTitle(t.title || pr.title);
+  if (open === T.name) open = '';
+  var who = [];
+  if (T.target.coll === 'tasks') {
+    if (t.assignee) who.push('מבצע: ' + t.assignee + (t.owner && t.owner !== 'Both' ? ' · במעקב של ' + ownerHe(t.owner) : ''));
+    else if (t.owner) who.push(ownerHe(t.owner));
+    var z = snoozeOf(t);
+    if (z && z > todayStr()) who.push('חוזרים ' + shortDate(z));
+    else if (t.dueDate) who.push((t.dueDate < todayStr() ? 'באיחור מ-' : 'עד ') + shortDate(t.dueDate));
+  }
+  return { happened: happened, open: open, next: who.join(' · ') };
+}
+function topicChange(T) {
+  var c = T.changes[0];
+  if (c) return (c.u.app ? c.u.kind + (c.u.text ? ': ' : '') : '') + c.u.text;
+  var pr = T.primary.rec || {};
+  return topicOf(pr.title).rest || cleanTitle(pr.title);
+}
+
+/* ---------- outbox: visible save state + retry + conflict repair ---------- */
+function saveOutbox() { lsSet('sync.outbox', S.outbox.filter(function (o) { return o.state !== 'done'; }).slice(-60)); }
+function withLine(coll, rec, line, snooze) {
+  var f = fieldOf(coll), p = splitNotes(rec[f]);
+  // always rebuild with exactly one copy of the line (a retry after a lost response must not duplicate it)
+  var kept = p.user.split('\n').filter(function (l) { return l.trim() !== line; }).join('\n').replace(/\s+$/, '');
+  var user = (kept ? kept + '\n' : '') + line;
+  var today = snooze ? null : p.today;
+  var v = joinNotes(user, today, p.block, coll === 'tasks' ? (snooze || p.snooze) : '');
+  if (v === rec[f]) return null;
+  if (v.length > FIELD_MAX) throw new Error('השדה מלא (מגבלת 5000 תווים בגיליון). אפשר לפתוח משימה חדשה לנושא.');
+  return v;
+}
+function postLine(coll, rec, line, extra) {
+  extra = extra || {};
+  if (!rec || isTmp(rec.id)) { toast('רגע, עדיין שומר…'); return null; }
+  var o = { oid: tmpId(), coll: coll, id: rec.id, line: line, snooze: extra.snooze || '', agendaDate: extra.agendaDate || '', state: 'pending', at: Date.now() };
+  S.outbox.push(o); saveOutbox();
+  sendOutbox(o);
+  return o;
+}
+function sendOutbox(o) {
+  var rec = byId(o.coll, o.id);
+  if (!rec) { o.state = 'error'; o.err = 'הרשומה לא נמצאה'; saveOutbox(); renderAll(); return; }
+  var val, f0 = fieldOf(o.coll), base = {};
+  base[f0] = rec._srv && rec._srv[f0] != null ? rec._srv[f0] : rec[f0]; // the server value, not the local overlay
+  try { val = withLine(o.coll, base, o.line, o.snooze); } catch (e) { o.state = 'error'; o.err = errMsg(e); saveOutbox(); renderAll(); return; }
+  if (val === null && !o.agendaDate) { o.state = 'saved'; o.savedAt = Date.now(); saveOutbox(); renderAll(); return; }
+  if (!navigator.onLine) { o.state = 'pending'; o.err = 'אין חיבור'; saveOutbox(); renderAll(); return; }
+  var patch = { id: o.id };
+  var prevVal = base[f0];
+  if (val !== null) { patch[fieldOf(o.coll)] = val; rec[fieldOf(o.coll)] = val; }
+  if (o.agendaDate && o.coll === 'agenda') { patch.date = o.agendaDate; rec.date = o.agendaDate; }
+  o.state = 'sending'; o.err = ''; saveOutbox();
+  S.pending++; S.rev++; renderAll(); setSync();
+  call(o.coll === 'tasks' ? 'updateTask' : 'updateAgendaItem', patch).then(function (res) {
+    o.state = 'saved'; o.savedAt = Date.now(); o.serverAt = res && res.updatedAt;
+    if (res && res.id) { var arr = S.data[o.coll]; for (var i = 0; i < arr.length; i++) if (arr[i].id === res.id) { arr[i] = Object.assign({}, res); break; } }
+  }).catch(function (e) {
+    o.state = 'error'; o.err = errMsg(e);
+    var r2 = byId(o.coll, o.id); if (r2) r2[fieldOf(o.coll)] = prevVal;
+  }).then(function () {
+    S.pending--; S.rev++; saveOutbox(); renderAll(); setSync();
+    schedulePoll(1500); // confirm from the server, and let the other device's next poll pick it up
+  });
+}
+/** After every poll: re-show unsent lines, confirm saved ones, and repair a line lost to a parallel write. */
+function reconcileOutbox() {
+  var repaired = 0;
+  S.outbox.forEach(function (o) {
+    var rec = byId(o.coll, o.id);
+    if (!rec) return;
+    var has = splitNotes(rec[fieldOf(o.coll)]).user.split('\n').some(function (l) { return l.trim() === o.line; });
+    if (o.state === 'saved' || o.state === 'verified') {
+      if (has) { if (o.state !== 'verified') { o.state = 'verified'; o.verifiedAt = Date.now(); } }
+      else if (Date.now() - (o.savedAt || 0) > 4000) { repaired++; o.conflict = true; sendOutbox(o); }
+    } else if (o.state === 'pending' || o.state === 'error') {
+      if (has) { o.state = 'verified'; o.verifiedAt = Date.now(); }
+      else { try { var f1 = fieldOf(o.coll); rec._srv = rec._srv || {}; if (rec._srv[f1] == null) rec._srv[f1] = rec[f1]; var v = withLine(o.coll, rec, o.line, o.snooze); if (v !== null) rec[f1] = v; } catch (e) {} } // show it, marked pending
+    }
+    if (o.state === 'verified' && Date.now() - o.verifiedAt > 60000) o.state = 'done';
+  });
+  S.outbox = S.outbox.filter(function (o) { return o.state !== 'done'; });
+  saveOutbox();
+  if (repaired) toast('זוהתה כתיבה מקבילה באותה רשומה. העדכון שלך נשמר מחדש', true);
+}
+function outboxFor(coll, id) { return S.outbox.filter(function (o) { return o.coll === coll && o.id === id; }); }
+function stateChip(o) {
+  if (!o) return '';
+  if (o.state === 'sending' || o.state === 'pending') return '<span class="chip warn small">ממתין לשמירה' + (o.err ? ' · ' + esc(o.err) : '') + '</span>' +
+    (o.state === 'pending' ? ' <button type="button" class="btn ghost sm" data-act="obRetry" data-v="' + esc(o.oid) + '">נסו שוב</button>' : '');
+  if (o.state === 'error') return '<span class="chip bad small">שגיאה: ' + esc(o.err || '') + '</span> <button type="button" class="btn ghost sm" data-act="obRetry" data-v="' + esc(o.oid) + '">נסו שוב</button>';
+  if (o.state === 'saved') return '<span class="chip small">נשלח · מאמת…</span>';
+  if (o.state === 'verified') return '<span class="chip ok small">✓ נשמר' + (o.conflict ? ' (אחרי כתיבה מקבילה)' : '') + '</span>';
+  return '';
+}
+function outboxSummary() {
+  var n = S.outbox.filter(function (o) { return o.state === 'pending' || o.state === 'sending'; }).length,
+      e = S.outbox.filter(function (o) { return o.state === 'error'; }).length;
+  return { waiting: n, errors: e };
+}
+
+/* ---------- drafts (personal, survive refresh / source browsing / reload) ---------- */
+function draftKey(kind, key) { return kind + ':' + key; }
+function draftVal(k) { return S.drafts[k] || ''; }
+function setDraft(k, v) { if (v) S.drafts[k] = v; else delete S.drafts[k]; lsSet('sync.drafts', S.drafts); }
+
+/* ---------- rendering ---------- */
+function syncAgo() {
+  if (!S.lastSync) return 'טרם סונכרן';
+  var s = Math.round((Date.now() - S.lastSync) / 1000);
+  return 'סונכרן לפני ' + (s < 60 ? s + ' שנ׳' : Math.round(s / 60) + ' דק׳');
+}
+function topicRow(T, o) {
+  o = o || {};
+  var open = S.open[T.key] || o.expanded, L = topicLines(T), t = T.target.rec || {};
+  var dk = draftKey('upd', T.key), dv = draftVal(dk);
+  var ob = outboxFor(T.target.coll, t.id).slice(-1)[0];
+  var src = T.target.coll === 'tasks' ? taskSource(t) : (function () {
+    var pr = T.primary.rec, b = splitNotes(pr.details || '').block, p = b ? parseSrc(b) : null;
+    if (p && p.kind === 'email' && !p.drorUrl) p.drorUrl = pr.link; return p && p.kind ? p : null;
+  })();
+  var srcOpen = S.open['src:' + T.key];
+  var mineChip = needsMe(t) ? '<span class="chip own-' + esc(S.me) + ' small">נדרש ממך</span>' : '';
+  var lines = [
+    L.happened ? '<div class="tl"><b>מה קרה:</b> <span dir="auto">' + esc(L.happened) + '</span></div>' : '',
+    L.open ? '<div class="tl"><b>מה פתוח:</b> <span dir="auto">' + esc(L.open) + '</span></div>' : '',
+    L.next ? '<div class="tl"><b>הצעד הבא:</b> ' + esc(L.next) + '</div>' : ''
+  ].join('');
+  return '<li class="topic' + (open ? ' on' : '') + (o.live ? ' live' : '') + '" data-key="' + esc(T.key) + '">' +
+    '<button type="button" class="topic-h" data-act="topicToggle" data-v="' + esc(T.key) + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+      '<span class="topic-name" dir="auto">' + esc(T.name) + '</span>' +
+      (topicChange(T) && topicChange(T) !== T.name ? '<span class="topic-ch" dir="auto">' + esc(topicChange(T).slice(0, 140)) + '</span>' : '') +
+      '<span class="topic-why">' + T.why.slice(0, 2).map(function (w) { return '<span class="chip gray small">' + esc(w) + '</span>'; }).join('') + mineChip + '</span>' +
+    '</button>' +
+    (open ? '<div class="topic-b">' + lines +
+      '<form class="upd" data-form="topicUpd" data-key="' + esc(T.key) + '" autocomplete="off">' +
+        '<input name="text" data-draft="' + esc(dk) + '" value="' + esc(dv) + '" maxlength="400" placeholder="הוספת עדכון (משפט אחד, גם תשובה שהגיעה בטלפון)">' +
+        '<button class="btn primary sm" type="submit">הוספת עדכון</button></form>' +
+      (ob ? '<div class="ob">' + stateChip(ob) + '</div>' : '') +
+      '<div class="topic-acts">' +
+        (src ? '<button type="button" class="btn ghost sm" data-act="srcToggle" data-v="' + esc(T.key) + '">' + (srcOpen ? 'הסתרת מקור' : 'מקור') + '</button>' : '') +
+        '<button type="button" class="btn ghost sm" data-act="topicOpen" data-v="' + esc(T.key) + '">פתיחת העסקה</button>' +
+        (!o.live && !S.seen[T.key + '|' + topicStamp(T)] ? '<button type="button" class="btn ghost sm" data-act="topicSeen" data-v="' + esc(T.key) + '">עודכנתי</button>' : '') +
+        (!o.live && !T.agenda.length ? '<button type="button" class="btn ghost sm" data-act="topicToAgenda" data-v="' + esc(T.key) + '">להעלות לשיחה</button>' : '') +
+      '</div>' +
+      (srcOpen && src ? '<div class="src-wrap">' + srcBoxHtml(src) + '</div>' : '') +
+    '</div>' : '') + '</li>';
+}
+function postCallHtml(m, title) {
+  if (!m) return '';
+  var s = m.meetingKey ? summaryByKey(m.meetingKey) : null;
+  var st = meetingStartMs(m), dayLines = [];
+  allRecs().forEach(function (r) { recLines(r.coll, r.rec).forEach(function (u) { if (u.app && u.date === m.date) dayLines.push({ u: u, r: r }); }); });
+  var appDecisions = dayLines.filter(function (x) { return x.u.kind === 'החלטה'; });
+  var parked = dayLines.filter(function (x) { return x.u.kind === 'להמשך עבודה' || /^סיום הסנכרון/.test(x.u.kind); });
+  var decisions = s ? splitLines(s.decisions) : [];
+  S.data.summaries.forEach(function (x) { if (x.date === m.date && x.meetingKey !== m.meetingKey && /המשך/.test(x.title || '')) decisions = decisions.concat(splitLines(x.decisions).map(function (d) { return d + ' (מקטע ההמשך)'; })); });
+  var brief = (S.data.briefs || []).filter(function (b) { return b.date === m.date; })[0];
+  var briefDec = brief ? (parseBrief(brief).sec['החלטות'] || []) : [];
+  // follow-up segments of the same sync (a later recording the same day titled "(המשך)"): one summary, linked parts
+  var segs = S.data.summaries.filter(function (x) { return x.date === m.date && x.meetingKey !== m.meetingKey && /המשך/.test(x.title || ''); }).sort(sumSort).reverse();
+  var segKeys = segs.map(function (x) { return x.meetingKey; });
+  var tasks = S.data.tasks.filter(function (t) {
+    if (m.meetingKey && t.meetingKey === m.meetingKey) return true;
+    if (t.meetingKey && segKeys.indexOf(t.meetingKey) >= 0) return true;
+    return !m.meetingKey && (t.createdBy === 'Dror' || t.createdBy === 'Shachar') && String(t.createdAt || '') >= m.date + ' ' + (m.time || '00:00');
+  });
+  function list(owner) {
+    var l = tasks.filter(function (t) { return t.owner === owner; }).sort(taskSort);
+    if (!l.length) return '<div class="muted small">אין</div>';
+    return '<ul class="pc">' + l.map(function (t) {
+      return '<li class="' + (t.status === 'done' ? 'done' : '') + '"><span dir="auto">' + esc(cleanTitle(t.title)) + '</span>' +
+        (segKeys.indexOf(t.meetingKey) >= 0 ? ' <span class="chip gray small">מקטע ההמשך</span>' : '') +
+        (t.assignee ? ' <span class="chip gray small">👤 ' + esc(t.assignee) + '</span>' : '') +
+        (t.dueDate ? ' <span class="chip small">מעקב ' + esc(shortDate(t.dueDate)) + '</span>' : '') +
+        ' <button type="button" class="btn ghost sm" data-act="editTask" data-id="' + esc(t.id) + '">פתיחה</button></li>';
+    }).join('') + '</ul>';
+  }
+  var recUrl = safeUrl(m.tldvLink) || (s && safeUrl(s.tldvUrl));
+  var status = s ? '<span class="chip ok small">ההקלטה עובדה</span>' + (recUrl ? ' <a class="chip" href="' + esc(recUrl) + '" target="_blank" rel="noopener">▶ tl;dv</a>' : '')
+    : '<span class="chip warn small">ממתין להקלטה</span> <span class="muted small">נכלל עד עכשיו: ' + appDecisions.length + ' החלטות ו-' + tasks.length + ' משימות מהאפליקציה · נבדק לאחרונה ' + esc(String(m.updatedAt || '').slice(5, 16)) + ' NY</span>';
+  var decHtml = (decisions.length ? decisions.map(function (d) { return '<li dir="auto">' + esc(d) + '</li>'; }).join('')
+      : briefDec.length ? briefDec.map(function (d) { return '<li dir="auto">' + esc(d.text) + (d.owner ? ' <span class="chip gray small">' + esc(d.owner) + '</span>' : '') + '</li>'; }).join('') : '') +
+    appDecisions.map(function (x) { return '<li dir="auto">' + esc(x.u.text) + ' <span class="muted small">(' + esc(x.u.who) + ' באפליקציה' + (s ? '' : ', ראשוני') + ')</span></li>'; }).join('');
+  var meFirst = S.me === 'Shachar' ? ['Shachar', 'Dror'] : ['Dror', 'Shachar'];
+  return '<section class="card post" id="postCall"><div class="card-head"><h2>' + esc(title) + '</h2></div><div class="post-st">' + status + '</div>' +
+    (segs.length ? '<div class="muted small">קטעים נוספים של אותו סנכרון: ' + segs.map(function (x) {
+      var u = safeUrl(x.tldvUrl); return esc((x.time || '') + ' ' + x.title) + (u ? ' <a href="' + esc(u) + '" target="_blank" rel="noopener">▶ tl;dv</a>' : ''); }).join(' · ') + '</div>' : '') +
+    '<div class="brief-h">החלטנו</div>' + (decHtml ? '<ul class="pc">' + decHtml + '</ul>' : '<div class="muted small">עוד לא נרשמו החלטות</div>') +
+    meFirst.map(function (w) { return '<div class="brief-h" id="took-' + w + '">' + (w === 'Dror' ? 'דרור לקח' : 'שחר לקח') + (S.me === w ? ' (אני)' : '') + '</div>' + list(w); }).join('') +
+    (tasks.some(function (t) { return t.owner === 'Both'; }) ? '<div class="brief-h">שנינו</div>' + list('Both') : '') +
+    (parked.length ? '<div class="brief-h">להמשך עבודה</div><ul class="pc">' + parked.map(function (x) {
+      return '<li dir="auto"><b>' + esc(topicOf(x.r.rec.title).name) + ':</b> ' + esc(x.u.text) + ' <span class="muted small">(' + esc(x.u.who) + ' ' + esc(x.u.time) + ')</span></li>'; }).join('') + '</ul>' : '') +
+    '</section>';
+}
+function liveHtml(m) {
+  var items = agendaFor(m), cur = items[0];
+  var done = S.data.agenda.filter(function (a) { return a.status === 'discussed' && String(a.updatedAt || '').slice(0, 10) === todayStr() && (!a.date || a.date <= m.date) && !isCorner(a) && !isBrief(a); }).length;
+  if (!cur) return '<section class="card live" id="liveCard"><h2>אין עוד נושאים פתוחים</h2><p class="muted">אפשר לסיים את הסנכרון.</p>' +
+    '<button type="button" class="btn" data-act="liveEnd">סיום הסנכרון</button></section>';
+  var topics = buildTopics(m).list;
+  var curT = topics.filter(function (T) { return T.agenda.indexOf(cur) >= 0; })[0];
+  var viewT = S.viewKey ? topics.filter(function (T) { return T.key === S.viewKey; })[0] : null;
+  if (viewT === curT) { viewT = null; S.viewKey = ''; }
+  var T = viewT || curT;
+  S.open[T.key] = true;
+  var rem = Math.round((meetingEndMs(m) - Date.now()) / 60000);
+  return '<section class="card live" id="liveCard">' +
+    '<div class="live-meta"><span>נושא ' + (done + 1) + ' מתוך ' + (done + items.length) + '</span>' +
+      '<span id="liveRem" class="' + (rem < 3 ? 'warn' : '') + '">' + (rem >= 0 ? 'נותרו ' + rem + ' דק׳ לפי הזימון' : 'חריגה של ' + (-rem) + ' דק׳') + '</span>' +
+      '<span class="muted" id="liveSync">' + esc(syncAgo()) + '</span></div>' +
+    (viewT ? '<div class="back-shared"><span>את/ה מעיין/ת בנושא אחר. הנושא המשותף: <b dir="auto">' + esc(curT.name) + '</b></span>' +
+      '<button type="button" class="btn primary sm" data-act="liveBack">חזרה לנושא המשותף</button></div>' : '') +
+    '<ul class="topics">' + topicRow(T, { live: true, expanded: true }) + '</ul>' +
+    '<div class="live-quick">' +
+      '<button type="button" class="btn sm" data-act="quickAsk" data-k="החלטה" data-v="' + esc(T.key) + '">✅ החלטה</button>' +
+      '<button type="button" class="btn sm" data-act="quickAsk" data-k="נדחה" data-v="' + esc(T.key) + '">💤 דחייה לתאריך</button>' +
+      '<button type="button" class="btn sm" data-act="quickMoment" data-v="' + esc(T.key) + '">🎙️ רגע בהקלטה</button>' +
+      '<button type="button" class="btn sm" data-act="quickAsk" data-k="להמשך עבודה" data-v="' + esc(T.key) + '">⏸ להמשך עבודה</button>' +
+      '<button type="button" class="btn sm" data-act="quickAsk" data-k="סיום הסנכרון והמשך על העסקה" data-v="' + esc(T.key) + '">⏹ סיום והמשך על העסקה</button>' +
+    '</div>' +
+    (viewT ? '' : '<button type="button" class="btn primary block" data-act="liveNext" data-id="' + esc(cur.id) + '">הבא ›</button>') +
+    '<div class="muted small" style="margin-top:6px">אפשר גם לסכם בקול כרגיל. מה שנאמר רק בהקלטה יופיע אחרי עיבוד התמלול.</div>' +
+    '<details class="live-list"><summary>כל הנושאים בשיחה (' + items.length + ')</summary><ol>' + items.map(function (a) {
+      var tk = topicOf(a.title).key;
+      return '<li><button type="button" class="linkish" data-act="liveView" data-v="' + esc(tk) + '" dir="auto">' + esc(cleanTitle(a.title).slice(0, 90)) + '</button></li>';
+    }).join('') + '</ol></details></section>';
+}
+function renderHome() {
+  var el = $('#tab-home'); if (!el) return;
+  var m = homeMeeting(), ph = phaseOf(m), pt = priorityTopics(m), ob = outboxSummary();
+  var teams = m ? safeUrl(m.teamsLink) : '';
+  var when = m ? relDay(m.date) + (m.time ? ' · ' + m.time + ' NY' : ' · שעה טרם נקבעה') : 'אין פגישה קבועה';
+  var started = syncStarted(m);
+  var primary = ph === 'during' && started ? ['liveGo', 'חזרה לנושא המשותף'] : ph === 'during' ? ['liveStart', 'מתחילים מהנושא הראשון'] : ph === 'after' ? ['myTasks', 'המשימות שלי מהשיחה'] : ['liveStart', 'מתחילים מהנושא הראשון'];
+  if (ph === 'before' && (!m || m.date !== todayStr())) primary = ['liveStart', 'מתחילים מהנושא הראשון'];
+  if (ph === 'after') S.liveLocal = false;
+  var att = m ? S.attended[m.id] : '';
+  var head = '<section class="card home-head" id="homeHead">' +
+    '<div class="hh-row"><div class="grow"><div class="muted small">' + (ph === 'during' ? 'הסנכרון עכשיו' : ph === 'after' ? 'הסנכרון של היום' : 'הסנכרון הבא') + '</div>' +
+      '<div class="hh-when">' + esc(when) + (m && m.status === 'proposed' ? ' <span class="chip warn small">הוצעה, ממתין לבחירה</span>' : '') + '</div></div>' +
+      (teams ? '<a class="btn" href="' + esc(teams) + '" target="_blank" rel="noopener">🎥 Teams</a>' : '') + '</div>' +
+    '<button type="button" class="btn primary block hh-main" data-act="' + primary[0] + '">' + esc(primary[1]) + '</button>' +
+    '<div class="hh-sub"><span id="homeSync">' + esc(syncAgo()) + '</span>' +
+      (liveWindow() ? '<span class="muted"> · מתרענן כל 10 שנ׳ בזמן הפגישה</span>' : '') +
+      (ob.waiting ? ' · <span class="chip warn small">' + ob.waiting + ' ממתינים לשמירה</span>' : '') +
+      (ob.errors ? ' · <span class="chip bad small">' + ob.errors + ' לא נשמרו</span> <button type="button" class="btn ghost sm" data-act="obRetryAll">נסו שוב</button>' : '') +
+      ' · <button type="button" class="linkish" data-act="copyLink">קישור קבוע לסביבת העבודה</button></div>' +
+    (ph === 'after' && m ? '<div class="hh-att">' + (att ? '<span class="chip ok small">סימנת: ' + esc(att) + '</span>' :
+      '<button type="button" class="btn ghost sm" data-act="attend" data-v="הייתי">הייתי בשיחה</button><button type="button" class="btn ghost sm" data-act="attend" data-v="עודכנתי">לא הייתי, עודכנתי</button>') + '</div>' : '') +
+    '</section>';
+  var body = '';
+  var live = (ph === 'during' && started) || S.liveLocal;
+  if (live) body += liveHtml(m);
+  if (ph === 'after') body += postCallHtml(m, syncEndLine(m) ? 'סיכום הסנכרון (הסנכרון הסתיים, ההמשך על העסקה)' : 'סיכום השיחה');
+  if (!live) {
+    var tops = pt.top;
+    body += '<section class="card" id="homeTopics"><div class="card-head"><h2>' + (ph === 'after' ? 'נושאים פתוחים' : 'מה פותחים קודם') + '</h2>' +
+      '<span class="muted small">' + (pt.all.length ? pt.all.length + ' נושאים' : '') + '</span></div>' +
+      (tops.length ? '<ul class="topics">' + tops.map(function (T) { return topicRow(T); }).join('') + '</ul>'
+        : '<div class="empty">אין היום נושא משותף. אפשר לדלג על הפגישה.</div>') +
+      (pt.rest.length ? '<button type="button" class="btn ghost block" data-act="homePanel" data-v="all">כל העדכונים (' + pt.rest.length + ')</button>' : '') +
+      '</section>';
+  }
+  if (S.homePanel === 'all') body += '<section class="card" id="homeAll"><div class="card-head"><h2>כל העדכונים</h2><button type="button" class="icon-btn" data-act="homePanel" data-v="">✕</button></div><ul class="topics">' +
+    pt.rest.map(function (T) { return topicRow(T); }).join('') + '</ul></section>';
+  var prev = previousSync(m);
+  if (ph === 'before' && prev) body += '<details class="card" id="prevCall"><summary><b>מהשיחה הקודמת</b> <span class="muted small">' + esc(relDay(prev.date)) + '</span></summary>' + postCallHtml(prev, 'סיכום ' + shortDate(prev.date)) + '</details>';
+  if (!live) body += focusHtml();
+  body += '<section class="card" id="homeTools"><div class="tools">' +
+    '<button type="button" class="btn ghost sm" data-act="homePanel" data-v="reconnect">🧭 הזדמנות לחידוש קשר</button>' +
+    '<button type="button" class="btn ghost sm" data-act="homePanel" data-v="review">🗂️ סקירה שבועית</button>' +
+    '<button type="button" class="btn ghost sm" data-act="homePanel" data-v="search">🔎 חיפוש</button>' +
+    '<button type="button" class="btn ghost sm" data-act="tab" data-v="summaries">🎙️ הקלטות וסיכומים</button></div>' +
+    (S.homePanel === 'reconnect' ? reconnectHtml(m) : S.homePanel === 'review' ? reviewHtml() : S.homePanel === 'search' ? searchHtml() : '') + '</section>';
+  // keep focus + caret in a draft field across re-render (the 10 s poll during the call re-renders)
+  var a = document.activeElement, fk = a && a.dataset && a.dataset.draft, sel = fk ? [a.selectionStart, a.selectionEnd] : null;
+  el.innerHTML = head + body;
+  if (fk) { var n = el.querySelector('[data-draft="' + CSS.escape(fk) + '"]'); if (n) { n.focus(); try { n.setSelectionRange(sel[0], sel[1]); } catch (e) {} } }
+}
+function focusHtml() {
+  if (!S.me) return '';
+  var mine = todayTasks().filter(function (t) { return t.owner === S.me || t.owner === 'Both'; });
+  if (!mine.length) return '';
+  return '<section class="card" id="homeFocus"><div class="card-head"><h2>3 משימות המיקוד שלי היום</h2>' +
+    (mine.length > 3 ? '<button type="button" class="btn ghost sm" data-act="tab" data-v="today">עוד ' + (mine.length - 3) + ' בלוח היום</button>' : '') + '</div>' +
+    '<ul class="list">' + mine.slice(0, 3).map(function (t) { return taskRow(t, { inToday: true }); }).join('') + '</ul></section>';
+}
+function reconnectHtml(m) {
+  var list = S.data.corners || [];
+  if (!list.length) return '<div class="muted small">אין עדיין הצעות.</div>';
+  var i = Math.max(0, Math.min(S.reIdx == null ? list.length - 1 : S.reIdx, list.length - 1)), c = list[i], p = parseCorner(c);
+  var why = (p.secs.filter(function (x) { return /^למה עכשיו/.test(x.t); })[0] || { lines: [] }).lines.slice(0, 2).join(' ');
+  var onAgenda = S.data.agenda.some(function (a) { return a.externalId === 'reconnect:' + c.date; });
+  return '<div class="reconnect"><div class="brief-h">הזדמנויות לחידוש קשר (לפי בקשה, לא נכנס לבד לסדר היום)</div>' +
+    '<div class="corner-name" dir="auto">' + esc(p.name) + '</div>' +
+    (why ? '<div class="tl"><b>למה להעלות:</b> ' + linkify(esc(why)) + '</div>' : '') +
+    (p.f['תקופה'] ? '<div class="tl"><b>קשר אחרון:</b> ' + esc(p.f['תקופה']) + '</div>' : '') +
+    '<div class="topic-acts">' + (onAgenda ? '<span class="chip ok small">✓ בסדר היום</span>' : '<button type="button" class="btn sm" data-act="reconnectAdd" data-id="' + esc(c.id) + '">להעלות לשיחה</button>') +
+    '<button type="button" class="btn ghost sm" data-act="reNav" data-dir="-1"' + (i > 0 ? '' : ' disabled') + '>הצעה קודמת</button>' +
+    '<button type="button" class="btn ghost sm" data-act="reNav" data-dir="1"' + (i < list.length - 1 ? '' : ' disabled') + '>הצעה הבאה</button>' +
+    '<span class="muted small">' + (i + 1) + ' / ' + list.length + '</span></div></div>';
+}
+/* weekly 10-minute review: open tasks with no update for 14+ days (read-only suggestion, the person decides) */
+function lastTouch(t) {
+  var ls = recLines('tasks', t).map(function (u) { return u.date; }).sort();
+  var d = ls.length ? ls[ls.length - 1] : '';
+  var c = t.sourceMeetingDate || String(t.createdAt || '').slice(0, 10); // imported recording tasks: the meeting date, not the 11.11 import
+  return d > c ? d : c;
+}
+function staleTasks() {
+  var lim = addDays(todayStr(), -14);
+  return S.data.tasks.filter(function (t) { return t.status !== 'done' && !isSnoozed(t) && lastTouch(t) && lastTouch(t) <= lim; })
+    .sort(function (a, b) { return lastTouch(a).localeCompare(lastTouch(b)); });
+}
+function archivedTasks() { return S.data.tasks.filter(function (t) { return t.status === 'done' && recLines('tasks', t).some(function (u) { return u.kind === 'העבר לארכיון'; }); }); }
+function reviewHtml() {
+  var st = staleTasks(), ar = archivedTasks();
+  return '<div class="review"><div class="brief-h">סקירה שבועית: ' + st.length + ' משימות בלי עדכון שבועיים או יותר</div>' +
+    '<div class="muted small">ההחלטה שלכם. "העבר לארכיון" מסמן הושלמה ורושם שורה, ואפשר להחזיר.</div>' +
+    '<ul class="list">' + st.slice(0, S.reviewLimit || 10).map(function (t) {
+      return '<li class="rv"><div dir="auto">' + esc(cleanTitle(t.title)) + '</div><div class="muted small">' + esc(ownerHe(t.owner)) + (t.assignee ? ' · ' + esc(t.assignee) : '') + ' · עדכון אחרון ' + esc(shortDate(lastTouch(t))) + '</div>' +
+        '<div class="topic-acts"><button type="button" class="btn ghost sm" data-act="rvKeep" data-id="' + esc(t.id) + '">עדיין רלוונטי</button>' +
+        '<button type="button" class="btn ghost sm" data-act="snoozeAsk" data-id="' + esc(t.id) + '">ממתין עד…</button>' +
+        '<button type="button" class="btn ghost sm" data-act="rvArchive" data-id="' + esc(t.id) + '">העבר לארכיון</button>' +
+        '<button type="button" class="btn ghost sm" data-act="editTask" data-id="' + esc(t.id) + '">פתיחה</button></div></li>';
+    }).join('') + '</ul>' +
+    (st.length > (S.reviewLimit || 10) ? '<button type="button" class="btn ghost block" data-act="rvMore">עוד</button>' : '') +
+    (ar.length ? '<details><summary>בארכיון (' + ar.length + ')</summary><ul class="list">' + ar.map(function (t) {
+      return '<li class="rv"><span dir="auto">' + esc(cleanTitle(t.title)) + '</span> <button type="button" class="btn ghost sm" data-act="rvRestore" data-id="' + esc(t.id) + '">החזרה מהארכיון</button></li>';
+    }).join('') + '</ul></details>' : '') + '</div>';
+}
+function searchHtml() {
+  var q = draftVal('search:home').trim().toLowerCase(), res = [];
+  if (q.length >= 2) {
+    S.data.tasks.forEach(function (t) { if ((t.title + ' ' + t.notes + ' ' + t.assignee).toLowerCase().indexOf(q) >= 0) res.push(['task', t]); });
+    S.data.summaries.forEach(function (s) { if ((s.title + ' ' + s.summaryBullets + ' ' + s.decisions).toLowerCase().indexOf(q) >= 0) res.push(['sum', s]); });
+  }
+  return '<div class="search"><input data-draft="search:home" value="' + esc(draftVal('search:home')) + '" placeholder="חברה, אתר, החלטה…" data-live="search">' +
+    (q.length >= 2 ? '<div class="muted small">' + res.length + ' תוצאות</div><ul class="list">' + res.slice(0, 15).map(function (r) {
+      if (r[0] === 'task') return '<li class="rv"><span class="chip gray small">' + (r[1].status === 'done' ? 'הושלמה / ארכיון' : 'משימה') + '</span> <span dir="auto">' + esc(cleanTitle(r[1].title)) + '</span> <button type="button" class="btn ghost sm" data-act="editTask" data-id="' + esc(r[1].id) + '">פתיחה</button></li>';
+      var s = r[1], dec = splitLines(s.decisions).filter(function (d) { return d.toLowerCase().indexOf(q) >= 0; })[0];
+      return '<li class="rv"><span class="chip gray small">' + esc(shortDate(s.date)) + '</span> <span dir="auto">' + esc(s.title) + '</span>' + (dec ? '<div class="small" dir="auto">החלטה: ' + esc(dec) + '</div>' : '') +
+        (safeUrl(s.tldvUrl) ? ' <a class="chip" href="' + esc(safeUrl(s.tldvUrl)) + '" target="_blank" rel="noopener">▶ tl;dv</a>' : '') + '</li>';
+    }).join('') + '</ul>' : '') + '</div>';
+}
+function openTopicModal(T) {
+  var recs = T.tasks.map(function (t) { return { coll: 'tasks', rec: t }; }).concat(T.agenda.map(function (a) { return { coll: 'agenda', rec: a }; }));
+  // also closed tasks and summaries that mention the name, for whoever missed the call
+  var nm = T.name.toLowerCase();
+  S.data.tasks.forEach(function (t) { if (T.tasks.indexOf(t) < 0 && topicOf(t.title).key === T.key) recs.push({ coll: 'tasks', rec: t }); });
+  var sums = S.data.summaries.filter(function (s) { return nm.length > 2 && (s.title + ' ' + s.summaryBullets + ' ' + s.decisions).toLowerCase().indexOf(nm) >= 0; }).sort(sumSort).slice(0, 6);
+  var inner = recs.map(function (r) {
+    var x = r.rec, lines = recLines(r.coll, x).slice(-6).reverse();
+    var src = r.coll === 'tasks' ? srcHtml(x) : '';
+    return '<div class="trec"><div><span class="chip gray small">' + (r.coll === 'tasks' ? (x.status === 'done' ? 'משימה שהושלמה' : 'משימה') : 'סדר היום') + '</span> <b dir="auto">' + esc(cleanTitle(x.title)) + '</b></div>' +
+      (lines.length ? '<ul class="pc">' + lines.map(function (u) { return '<li dir="auto"><span class="muted small">' + esc(shortDate(u.date) + (u.time ? ' ' + u.time : '') + (u.who ? ' · ' + u.who : '')) + '</span> ' + esc((u.app ? u.kind + (u.text ? ': ' : '') : '') + u.text) + '</li>'; }).join('') + '</ul>' : '') +
+      src + '</div>';
+  }).join('') +
+    (sums.length ? '<div class="brief-h">בסיכומי שיחות</div><ul class="pc">' + sums.map(function (s) {
+      var b = splitLines(s.summaryBullets + '\n' + s.decisions).filter(function (l) { return l.toLowerCase().indexOf(nm) >= 0; }).slice(0, 2);
+      return '<li><b>' + esc(shortDate(s.date)) + ' · ' + esc(s.title) + '</b>' + b.map(function (l) { return '<div class="small" dir="auto">' + esc(l) + '</div>'; }).join('') +
+        (safeUrl(s.tldvUrl) ? ' <a href="' + esc(safeUrl(s.tldvUrl)) + '" target="_blank" rel="noopener">▶ tl;dv</a>' : '') + '</li>';
+    }).join('') + '</ul>' : '') +
+    '<div class="muted small">מה הלקוח ביקש ומה הצוות הציע מופיע בשורות ההקשר והציטוט במקור. הפרדה מלאה לפי סוג פריט מתוכננת לשלב 2.</div>';
+  openModal(T.name, inner, null, { noFooter: true });
+}
+function findTopic(key) { return buildTopics(homeMeeting()).list.filter(function (T) { return T.key === key; })[0]; }
+function askQuick(kind, T) {
+  var m = homeMeeting(), dk = draftKey(kind, T.key);
+  if (kind === 'נדחה') {
+    openModal('דחייה לתאריך · ' + T.name, '<label class="fld"><span>חוזרים לזה ב-</span><input type="date" name="date" required value="' + esc(addDays(todayStr(), 7)) + '"></label>' +
+      '<label class="fld"><span>סיבה או תנאי (לא חובה)</span><input name="text" maxlength="300" data-draft="' + esc(dk) + '" value="' + esc(draftVal(dk)) + '"></label>' +
+      '<div class="muted small">הדחייה חלה על הנושא בכל המקורות. עדכון ישן שנקלט שוב לא יחזיר אותו לשיחה.</div>', function (d) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d.date)) return false;
+      var line = mkLine('נדחה עד ' + d.date, d.text);
+      T.tasks.forEach(function (t) { postLine('tasks', t, line, { snooze: d.date }); });
+      T.agenda.forEach(function (a) {
+        if (!T.tasks.length) { postLine('agenda', a, line, { agendaDate: d.date }); return; }
+        // the history line lives on the task; the agenda item only moves to that meeting date
+        mutate('agenda', function () { var r = byId('agenda', a.id); if (r) r.date = d.date; }, 'updateAgendaItem', { id: a.id, date: d.date });
+      });
+      setDraft(dk, ''); S.viewKey = '';
+    });
+    return;
+  }
+  var two = kind === 'להמשך עבודה' || /^סיום הסנכרון/.test(kind);
+  openModal(kind + ' · ' + T.name, two
+    ? '<label class="fld"><span>השאלה שנותרה</span><input name="q" required maxlength="300" data-draft="' + esc(dk + ':q') + '" value="' + esc(draftVal(dk + ':q')) + '"></label>' +
+      '<label class="fld"><span>איפה עצרנו</span><input name="p" maxlength="300" data-draft="' + esc(dk + ':p') + '" value="' + esc(draftVal(dk + ':p')) + '"></label>' +
+      (kind === 'להמשך עבודה' ? '<div class="muted small">הנושא יוצא מהסנכרון ונשמר להמשך. המשך עם עומרי או שיחה מאוחרת יותר יקושרו אליו.</div>' : '<div class="muted small">הסנכרון מסתיים כאן לשניכם, והשיחה ממשיכה על העסקה. הסוכן מפריד בין סוף הסנכרון לסוף השיחה.</div>')
+    : '<label class="fld"><span>' + esc(kind) + '</span><input name="q" required maxlength="400" data-draft="' + esc(dk + ':q') + '" value="' + esc(draftVal(dk + ':q')) + '"></label>',
+  function (d) {
+    var text = two ? d.q + (d.p ? ' | נעצרנו ב: ' + d.p : '') : d.q;
+    var tgt = T.target;
+    postLine(tgt.coll, tgt.rec, mkLine(kind, text));
+    setDraft(dk + ':q', ''); setDraft(dk + ':p', '');
+    if (two && T.agenda[0] && T.agenda[0].status !== 'discussed') markDiscussed(T.agenda[0].id);
+    if (/^סיום הסנכרון/.test(kind)) { S.liveLocal = false; }
+  });
+}
+var nextLock = {};
+function markDiscussed(id) {
+  var a = byId('agenda', id);
+  if (!a || a.status === 'discussed' || nextLock[id]) return false; // second press on the same topic: no-op
+  nextLock[id] = Date.now();
+  setTimeout(function () { delete nextLock[id]; }, 8000);
+  setAgendaStatus(id, 'discussed');
+  return true;
+}
+/** "מתחילים": put the top topics on the shared agenda (idempotent externalId) and first in order, then go live. */
+function startSync() {
+  var m = homeMeeting();
+  S.liveLocal = true; S.viewKey = '';
+  if (!m || !m.date) { renderAll(); return; }
+  var startedToday = S.data.agenda.some(function (a) { return a.status === 'discussed' && String(a.updatedAt || '').slice(0, 10) === todayStr() && !isCorner(a) && !isBrief(a); });
+  var tops = buildTopics(m).list.slice(0, 3);
+  var ops = [];
+  tops.forEach(function (T) {
+    if (T.agenda.length || !T.target || T.target.coll !== 'tasks') return;
+    var t = T.target.rec;
+    ops.push({ action: 'addAgendaItem', data: { title: cleanTitle(t.title).slice(0, 300), date: m.date, source: 'task', createdBy: me(), externalId: 'task:' + t.id + ':' + m.date } });
+  });
+  if (startedToday && !ops.length) { renderAll(); return; }
+  S.pending++; setSync();
+  var p = ops.length ? call('bulk', { ops: ops }) : Promise.resolve({ results: [] });
+  p.then(function (r) {
+    var added = (r.results || []).filter(function (x) { return x.ok && x.result; }).map(function (x) { return x.result; });
+    added.forEach(function (a) { if (!byId('agenda', a.id)) S.data.agenda.push(Object.assign({}, a)); });
+    if (startedToday) return null;
+    var want = [];
+    tops.forEach(function (T) { var a = T.agenda[0] || added.filter(function (x) { return x.title === cleanTitle(T.target.rec.title).slice(0, 300); })[0]; if (a) want.push(a.id); });
+    var ids = want.concat(agendaFor(m).map(function (a) { return a.id; }).filter(function (id) { return want.indexOf(id) < 0; }));
+    var curIds = agendaFor(m).map(function (a) { return a.id; });
+    if (ids.join() === curIds.join()) return null;
+    ids.forEach(function (id, i) { var a = byId('agenda', id); if (a) a.order = String(i + 1); });
+    return call('reorderAgenda', { ids: ids });
+  }).catch(function (e) { toast('לא הצלחנו לסדר את הנושאים: ' + errMsg(e), true); })
+    .then(function () { S.pending--; renderAll(); setSync(); schedulePoll(1000); });
+  renderAll();
+}
+
+/* ---------- polling: fast during the meeting window, separate from the 1 s display tick ---------- */
+var pollTimer = null;
+function schedulePoll(ms) {
+  clearTimeout(pollTimer);
+  pollTimer = setTimeout(function () {
+    if (!document.hidden) refresh();
+    schedulePoll(liveWindow() ? LIVE_POLL_MS : IDLE_POLL_MS);
+  }, ms == null ? (liveWindow() ? LIVE_POLL_MS : IDLE_POLL_MS) : ms);
+}
+function homeTick() {
+  var s = $('#homeSync'); if (s) s.textContent = syncAgo();
+  var l = $('#liveSync'); if (l) l.textContent = syncAgo();
+  var r = $('#liveRem'), m = homeMeeting();
+  if (r && m) { var rem = Math.round((meetingEndMs(m) - Date.now()) / 60000); r.textContent = rem >= 0 ? 'נותרו ' + rem + ' דק׳ לפי הזימון' : 'חריגה של ' + (-rem) + ' דק׳'; }
+  var ph = phaseOf(m);
+  if (S.tab === 'home' && S.lastPhase && S.lastPhase !== ph) renderHome();
+  S.lastPhase = ph;
+}
+
+var HOME_ACT = {
+  liveStart: function () { startSync(); window.scrollTo(0, 0); },
+  liveGo: function () { S.liveLocal = true; S.viewKey = ''; renderHome(); var c = $('#liveCard'); if (c && c.scrollIntoView) c.scrollIntoView({ block: 'start' }); },
+  liveBack: function () { S.viewKey = ''; renderHome(); },
+  liveView: function (d) { S.viewKey = d.v; renderHome(); },
+  liveNext: function (d) { if (markDiscussed(d.id)) { S.viewKey = ''; } else renderHome(); },
+  liveEnd: function () { S.liveLocal = false; renderHome(); },
+  myTasks: function () { var el = document.getElementById('took-' + (S.me || 'Dror')); if (el) el.scrollIntoView({ block: 'center' }); },
+  topicToggle: function (d) { S.open[d.v] = !S.open[d.v]; renderHome(); },
+  srcToggle: function (d) { S.open['src:' + d.v] = !S.open['src:' + d.v]; renderHome(); },
+  topicOpen: function (d) { var T = findTopic(d.v); if (T) openTopicModal(T); },
+  topicSeen: function (d) { var T = findTopic(d.v); if (!T) return; S.seen[T.key + '|' + topicStamp(T)] = nowStamp(); lsSet('sync.seen', S.seen); toast('סומן אצלך כעודכנת. הנושא עבר ל"כל העדכונים"'); renderHome(); },
+  topicToAgenda: function (d) {
+    var T = findTopic(d.v), m = homeMeeting(); if (!T || !m || T.target.coll !== 'tasks') return;
+    var t = T.target.rec, id = tmpId(), rec = { title: cleanTitle(t.title).slice(0, 300), date: m.date, source: 'task', details: '', link: '', externalId: 'task:' + t.id + ':' + m.date };
+    mutate('agenda', function () { S.data.agenda.push(Object.assign({ id: id, _pending: true, status: 'open', createdBy: me(), createdAt: nowStamp(), updatedAt: nowStamp() }, rec)); },
+      'addAgendaItem', Object.assign({ createdBy: me() }, rec), { tempId: id });
+    toast('נוסף לסדר היום של ' + shortDate(m.date));
+  },
+  quickAsk: function (d) { var T = findTopic(d.v); if (T) askQuick(d.k, T); },
+  quickMoment: function (d) {
+    var T = findTopic(d.v), m = homeMeeting(); if (!T || !m) return;
+    var sec = Math.max(0, Math.round((Date.now() - meetingStartMs(m)) / 1000));
+    var mm = Math.floor(sec / 60), ss = sec % 60;
+    postLine(T.target.coll, T.target.rec, mkLine('רגע בהקלטה ' + (mm < 10 ? '0' : '') + mm + ':' + (ss < 10 ? '0' : '') + ss, T.name));
+    toast('סומן רגע בהקלטה. הקישור המדויק יופיע אחרי עיבוד ההקלטה');
+  },
+  obRetry: function (d) { var o = S.outbox.filter(function (x) { return x.oid === d.v; })[0]; if (o) sendOutbox(o); },
+  obRetryAll: function () { S.outbox.forEach(function (o) { if (o.state === 'error' || o.state === 'pending') sendOutbox(o); }); },
+  copyLink: function () {
+    var u = location.origin + location.pathname;
+    try { if (navigator.clipboard) navigator.clipboard.writeText(u).catch(function () {}); } catch (e) {}
+    toast('הקישור הקבוע הועתק: ' + u);
+  },
+  attend: function (d) { var m = homeMeeting(); if (!m) return; S.attended[m.id] = d.v; lsSet('sync.attended', S.attended); renderHome(); },
+  homePanel: function (d) { S.homePanel = S.homePanel === d.v ? '' : d.v; renderHome(); },
+  reNav: function (d) { var n = (S.data.corners || []).length; S.reIdx = Math.max(0, Math.min(n - 1, (S.reIdx == null ? n - 1 : S.reIdx) + Number(d.dir))); renderHome(); },
+  reconnectAdd: function (d) {
+    var c = byId('corners', d.id), m = homeMeeting(); if (!c) return;
+    var p = parseCorner(c), id = tmpId();
+    var rec = { title: 'חידוש קשר: ' + p.name, date: m ? m.date : '', source: 'manual', details: (p.f['תקציר'] || '').slice(0, 1000), link: '', externalId: 'reconnect:' + c.date };
+    mutate('agenda', function () { S.data.agenda.push(Object.assign({ id: id, _pending: true, status: 'open', createdBy: me(), createdAt: nowStamp(), updatedAt: nowStamp() }, rec)); },
+      'addAgendaItem', Object.assign({ createdBy: me() }, rec), { tempId: id });
+    toast('נוסף לשיחה');
+  },
+  rvKeep: function (d) { var t = byId('tasks', d.id); if (t) postLine('tasks', t, mkLine('עדיין רלוונטי')); },
+  rvArchive: function (d) {
+    var t = byId('tasks', d.id); if (!t) return;
+    var o = postLine('tasks', t, mkLine('העבר לארכיון'));
+    if (o) mutate('tasks', function () { var r = byId('tasks', d.id); if (r) r.status = 'done'; }, 'updateTask', { id: d.id, status: 'done' });
+  },
+  rvRestore: function (d) { var t = byId('tasks', d.id); if (!t) return; postLine('tasks', t, mkLine('הוחזר מהארכיון')); mutate('tasks', function () { var r = byId('tasks', d.id); if (r) r.status = 'open'; }, 'updateTask', { id: d.id, status: 'open' }); },
+  rvMore: function () { S.reviewLimit = (S.reviewLimit || 10) + 20; renderHome(); }
+};
+
+Object.keys(HOME_ACT).forEach(function (k) { ACT[k] = HOME_ACT[k]; });
+document.addEventListener('input', function (e) {
+  var el = e.target;
+  if (!el || !el.dataset || !el.dataset.draft) return;
+  setDraft(el.dataset.draft, el.value);
+  if (el.dataset.live === 'search') { clearTimeout(S.searchT); S.searchT = setTimeout(renderHome, 250); }
+});
+window.addEventListener('online', function () { HOME_ACT.obRetryAll(); });
+if (window.__DS_TEST__) window.__DS_TEST__.api = { S: S, refresh: refresh, renderAll: renderAll, buildTopics: buildTopics, homeMeeting: homeMeeting, phaseOf: phaseOf }; // local tests only
 /* ---------------- Boot ---------------- */
-if (['today', 'agenda', 'tasks', 'summaries'].indexOf(S.tab) < 0) S.tab = 'today';
+S.tab = 'home'; // the app always opens on the home screen; other tabs are one tap away
 if (!KEY) { showKeyPrompt(); return; }
 renderAll();
 refresh();
 if (!S.me) openWho();
-setInterval(function () { if (!document.hidden) refresh(); }, REFRESH_MS);
+if (window.__dsRoute) {
+  // deep link from the triage report / recap: open the record once the data is in
+  var routeTry = 0, routeT = setInterval(function () {
+    var m = window.__dsRoute.match(/^task=(.+)$/), t = m && byId('tasks', m[1]);
+    if (t || ++routeTry > 40) { clearInterval(routeT); if (t && S.me) openTaskModal(t); if (history.replaceState) history.replaceState(null, '', location.pathname); }
+  }, 500);
+}
+schedulePoll(); // 10 s inside the meeting window, 60 s otherwise; the display tick below is separate
 setInterval(tick, 500);
+setInterval(homeTick, 1000);
 setTimeout(checkVersion, 20000);
 setInterval(function () { if (!document.hidden) checkVersion(); }, 10 * 60000);
 })();
